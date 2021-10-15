@@ -1,0 +1,27 @@
+package de.invees.portal.common.utils.input;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class InputUtils {
+
+  public static Pattern PATTERN = Pattern.compile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$");
+
+
+  public static boolean isInvalidEmailAddress(String email) {
+    if (isEmpty(email)) {
+      return true;
+    }
+    Matcher m = PATTERN.matcher(email);
+    return !m.matches();
+  }
+
+  public static boolean isEmpty(String field) {
+    if (field == null || field.isBlank() || field.isEmpty() || field.equalsIgnoreCase("")
+        || field.equalsIgnoreCase(" ")) {
+      return true;
+    }
+    return false;
+  }
+
+}
