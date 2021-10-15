@@ -11,7 +11,7 @@ import de.invees.portal.common.utils.service.LazyLoad;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.order.request.OrderRequest;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.input.InvoiceCalculator;
+import de.invees.portal.common.utils.input.InvoiceUtils;
 import de.invees.portal.core.utils.TokenUtils;
 import de.invees.portal.common.datasource.ConnectionService;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
@@ -34,7 +34,7 @@ public class OrderController {
   public Object preview(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     OrderRequest orderRequest = GsonUtils.GSON.fromJson(body.get("orderRequest"), OrderRequest.class);
-    return GsonUtils.GSON.toJson(InvoiceCalculator.calculate(null, null, null, orderRequest));
+    return GsonUtils.GSON.toJson(InvoiceUtils.calculate(null, null, null, orderRequest));
   }
 
   public Object order(Request req, Response resp) {
@@ -45,7 +45,7 @@ public class OrderController {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     OrderRequest orderRequest = GsonUtils.GSON.fromJson(body.get("orderRequest"), OrderRequest.class);
     UUID orderId = UUID.randomUUID();
-    Invoice invoice = InvoiceCalculator.calculate(UUID.randomUUID(), user.getId(), orderId, orderRequest);
+    Invoice invoice = InvoiceUtils.calculate(UUID.randomUUID(), user.getId(), orderId, orderRequest);
 
     Order order = new Order(
         orderId,

@@ -1,12 +1,13 @@
 package de.invees.portal.common.utils.input;
 
+import com.itextpdf.html2pdf.HtmlConverter;
+import de.invees.portal.common.model.invoice.InvoiceStatus;
 import de.invees.portal.common.model.price.Price;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.datasource.ConnectionService;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
 import de.invees.portal.common.exception.CalculationException;
-import de.invees.portal.common.model.order.Order;
 import de.invees.portal.common.model.order.request.OrderRequest;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.invoice.InvoiceConfigurationEntry;
@@ -16,13 +17,16 @@ import de.invees.portal.common.model.section.configuration.SectionConfigurationE
 import de.invees.portal.common.model.section.configuration.SectionConfigurationEntryOption;
 import de.invees.portal.common.utils.service.ServiceRegistry;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public class InvoiceCalculator {
+public class InvoiceUtils {
 
   public static Invoice calculate(UUID id, UUID userId, UUID orderId, Product product, Section section,
                                   Map<String, Object> configuration, int contractTerm, boolean ignoreOneOff) {
@@ -93,7 +97,8 @@ public class InvoiceCalculator {
             round(oneOffPrice),
             round(taxes(oneOffPrice, 19))
         ),
-        subEntries
+        subEntries,
+        InvoiceStatus.UNPAID
     );
   }
 
@@ -139,4 +144,16 @@ public class InvoiceCalculator {
     }
     return null;
   }
+
+  public static void createInvoiceFile() {
+    try {
+      HtmlConverter.convertToPdf(
+          Files.readString(new File("C:\\Users\\kroseida\\Desktop\\rechnung\\test.html").toPath()),
+          new FileOutputStream(new File("C:\\Users\\kroseida\\Desktop\\rechnung\\testx.pdf"))
+      );
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
 }

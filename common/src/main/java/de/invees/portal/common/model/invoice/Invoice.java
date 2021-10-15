@@ -22,5 +22,6 @@ public class Invoice implements Model {
   private final Price monthly;
   private final Price oneOff;
   private final List<InvoiceConfigurationEntry> configuration;
+  private final InvoiceStatus status;
 
 }

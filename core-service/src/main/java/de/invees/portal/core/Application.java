@@ -1,5 +1,6 @@
 package de.invees.portal.core;
 
+import de.invees.portal.common.utils.input.InvoiceUtils;
 import de.invees.portal.core.configuration.Configuration;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.service.ServiceRegistry;
@@ -53,6 +54,7 @@ public class Application {
 
   public void startWebServer() {
     LOGGER.info("Starting Web Server..");
+    InvoiceUtils.createInvoiceFile();
     new SparkServer();
   }
 
