@@ -42,7 +42,10 @@ public class ConnectionService implements Service {
     dataSourceMap.put(OrderDataSource.class, new OrderDataSource());
     dataSourceMap.put(InvoiceDataSource.class, new InvoiceDataSource());
 
-    dataSourceMap.forEach((k, d) -> d.init(database.getCollection(k.getSimpleName().replace("DataSource", ""))));
+    dataSourceMap.forEach((k, d) -> d.init(
+        database.getCollection(k.getSimpleName().replace("DataSource", "")),
+        database.getCollection("Sequence")
+    ));
   }
 
   public <T extends DataSource> T access(@NonNull Class<T> model) {

@@ -1,4 +1,4 @@
-package de.invees.portal.common.utils.input;
+package de.invees.portal.core.utils.input;
 
 import com.itextpdf.html2pdf.HtmlConverter;
 import de.invees.portal.common.model.invoice.InvoiceStatus;
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 public class InvoiceUtils {
 
-  public static Invoice calculate(UUID id, UUID userId, UUID orderId, Product product, Section section,
+  public static Invoice calculate(int id, UUID userId, UUID orderId, Product product, Section section,
                                   Map<String, Object> configuration, int contractTerm, boolean ignoreOneOff) {
     for (String key : configuration.keySet()) {
       boolean found = false;
@@ -102,21 +102,30 @@ public class InvoiceUtils {
     );
   }
 
-  public static Invoice calculate(UUID id, UUID userId, UUID orderId, OrderRequest orderRequest) {
+  public static Invoice calculate(int id, UUID userId, UUID orderId, OrderRequest orderRequest) {
     ProductDataSource productDataSource = ServiceRegistry.access(ConnectionService.class).access(ProductDataSource.class);
     SectionDataSource sectionDataSource = ServiceRegistry.access(ConnectionService.class).access(SectionDataSource.class);
 
-    Product product = productDataSource.getProduct(orderRequest.getProductId());
+    Product product = productDataSource.byId(orderRequest.getProductId(), Product.class);
     if (product == null) {
       throw new CalculationException("INVALID_PRODUCT");
     }
 
-    Section section = sectionDataSource.getSection(product.getSectionId());
+    Section section = sectionDataSource.byId(product.getSectionId(), Section.class);
 
     if (section == null) {
       throw new CalculationException("INVALID_SECTION");
     }
-    return calculate(id, userId, orderId, product, section, orderRequest.getConfiguration(), orderRequest.getContractTerm(), false);
+    return calculate(
+        id,
+        userId,
+        orderId,
+        product,
+        section,
+        orderRequest.getConfiguration(),
+        orderRequest.getContractTerm(),
+        false
+    );
   }
 
   public static double taxes(double amount, double percent) {

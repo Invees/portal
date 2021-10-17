@@ -3,16 +3,18 @@ package de.invees.portal.common.model.order;
 import com.google.gson.annotations.SerializedName;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.order.request.OrderRequest;
-import de.invees.portal.common.model.product.Product;
-import de.invees.portal.common.model.invoice.Invoice;
-import de.invees.portal.common.model.section.Section;
 import lombok.Data;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Data
 public class Order implements Model {
+
+  public static final String ID = "_id";
+  public static final String USER_ID = "userId";
+  public static final String ORDER_TIME = "orderTime";
+  public static final String REQUEST = "request";
+  public static final String STATUS = "status";
 
   @SerializedName("_id")
   private final UUID id;
@@ -21,4 +23,13 @@ public class Order implements Model {
   private final OrderRequest request;
   private final OrderStatus status;
 
+  public static String[] projection() {
+    return new String[]{
+        ID,
+        USER_ID,
+        ORDER_TIME,
+        REQUEST,
+        STATUS
+    };
+  }
 }

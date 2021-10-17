@@ -61,6 +61,9 @@ public class User implements Model {
   }
 
   public Permission getPermission(String name) {
+    if (permissions == null) {
+      return null;
+    }
     for (Permission permission : permissions) {
       if (permission.getName().equalsIgnoreCase(name)) {
         return permission;

@@ -1,5 +1,6 @@
 package de.invees.portal.core.controller.section;
 
+import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.service.LazyLoad;
@@ -20,20 +21,10 @@ public class SectionController {
     get("/section/", this::getSections);
     get("/section/:sectionId/", this::getSection);
     get("/section/:sectionId/product/", this::getProductsForSection);
-    get("/section/:sectionId/product/:productId/", this::getProduct);
-  }
-
-  private Object getProduct(Request req, Response res) {
-    Section section = section(req.params("section"));
-    Product product = product(req.params("product"));
-    if (!product.getSectionId().equals(section.getId())) {
-      return null;
-    }
-    return GsonUtils.GSON.toJson(product);
   }
 
   public Object getSections(Request req, Response resp) {
-    return GsonUtils.GSON.toJson(sectionDataSource().getSections());
+    return GsonUtils.GSON.toJson(sectionDataSource().list(Section.class));
   }
 
   public Object getSection(Request req, Response resp) {
@@ -41,25 +32,17 @@ public class SectionController {
   }
 
   private Object getProductsForSection(Request req, Response resp) {
+    Section section = section(req.params("sectionId"));
+    if (section == null) {
+      throw new InputException("INVALID_SECTION");
+    }
     return GsonUtils.GSON.toJson(
-        productDataSource().getProductsForSection(section(req.params("sectionId")).getId())
+        productDataSource().listForSection(section(req.params("sectionId")).getId(), Product.class)
     );
   }
 
   private Section section(String section) {
-    try {
-      return sectionDataSource().getSection(section);
-    } catch (Exception e) {
-      return sectionDataSource().getSection(section);
-    }
-  }
-
-  private Product product(String product) {
-    try {
-      return productDataSource().getProduct(product);
-    } catch (Exception e) {
-      return productDataSource().getProduct(product);
-    }
+    return sectionDataSource().byId(section, Section.class);
   }
 
   private SectionDataSource sectionDataSource() {

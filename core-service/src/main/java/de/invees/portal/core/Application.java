@@ -1,6 +1,6 @@
 package de.invees.portal.core;
 
-import de.invees.portal.common.utils.input.InvoiceUtils;
+import de.invees.portal.core.utils.input.InvoiceUtils;
 import de.invees.portal.core.configuration.Configuration;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.service.ServiceRegistry;

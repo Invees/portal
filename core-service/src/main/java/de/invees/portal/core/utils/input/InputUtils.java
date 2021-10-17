@@ -1,4 +1,4 @@
-package de.invees.portal.common.utils.input;
+package de.invees.portal.core.utils.input;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

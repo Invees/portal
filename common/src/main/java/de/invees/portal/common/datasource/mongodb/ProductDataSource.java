@@ -2,50 +2,44 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
+import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.product.ProductPrototype;
 import de.invees.portal.common.model.section.Section;
 import lombok.Getter;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProductDataSource implements DataSource {
+public class ProductDataSource implements DataSource<Product> {
 
   @Getter
   private MongoCollection<Document> collection;
+  @Getter
+  private MongoCollection<Document> sequenceCollection;
 
   @Override
-  public void init(MongoCollection<Document> collection) {
+  public void init(MongoCollection<Document> collection, MongoCollection<Document> sequenceCollection) {
     this.collection = collection;
+    this.sequenceCollection = sequenceCollection;
   }
 
-  public List<ProductPrototype> getProducts() {
-    return collection.find(
-            Filters.eq(Section.ACTIVE, true)
-        )
-        .projection(Projections.include(ProductPrototype.projection()))
-        .map(document -> this.map(document, ProductPrototype.class))
-        .into(new ArrayList<>());
+  @Override
+  public Bson listFilter() {
+    return Filters.eq(Section.ACTIVE, true);
   }
 
-  public List<Product> getProductsForSection(String sectionId) {
-    return collection.find(Filters.and(
+  public <Y extends Model> List<Y> listForSection(String sectionId, Class<Y> type) {
+    return wrapped(
+        collection.find(Filters.and(
             Filters.eq(Product.SECTION_ID, sectionId),
             Filters.eq(Section.ACTIVE, true)
-        ))
-        .projection(Projections.include(Product.projection()))
-        .map(document -> this.map(document, Product.class))
+        )),
+        type
+    )
         .into(new ArrayList<>());
   }
 
-  public Product getProduct(String id) {
-    return collection.find(Filters.eq(Product.ID, id))
-        .projection(Projections.include(Product.projection()))
-        .map(document -> this.map(document, Product.class))
-        .first();
-  }
 }

@@ -5,59 +5,66 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import de.invees.portal.common.exception.MissingUserException;
 import de.invees.portal.common.exception.UserCreationException;
+import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.user.User;
 import de.invees.portal.common.model.user.permission.Permission;
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.model.user.DisplayUser;
 import lombok.Getter;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.List;
 import java.util.UUID;
 
-public class UserDataSource implements DataSource {
+public class UserDataSource implements DataSource<User> {
 
   @Getter
   private MongoCollection<Document> collection;
+  @Getter
+  private MongoCollection<Document> sequenceCollection;
 
   @Override
-  public void init(MongoCollection<Document> collection) {
+  public void init(MongoCollection<Document> collection, MongoCollection<Document> sequenceCollection) {
     this.collection = collection;
+    this.sequenceCollection = sequenceCollection;
+    this.createIndex(User.EMAIL, true);
+    this.createIndex(User.NAME, true);
   }
 
-  public void create(DisplayUser user) {
-    if (getUserByEmail(user.getEmail()) != null) {
+  @Override
+  public Bson listFilter() {
+    return null;
+  }
+
+  public void createDisplayUser(DisplayUser user) {
+    if (byEmail(user.getEmail(), User.class) != null) {
       throw new UserCreationException("EMAIL_TAKEN");
     }
-    if (getUserByName(user.getName()) != null) {
+    if (byName(user.getName(), User.class) != null) {
       throw new UserCreationException("NAME_TAKEN");
     }
     this.collection.insertOne(this.map(user));
   }
 
-  public User getUserByName(String name) {
-    return this.collection.find(Filters.eq(User.NAME, name))
-        .projection(Projections.include(User.projection()))
-        .map(document -> this.map(document, User.class))
+  public <Y extends Model> Y byName(String name, Class<Y> type) {
+    return wrapped(
+        this.collection.find(Filters.eq(User.NAME, name)),
+        type
+    )
         .first();
   }
 
-  public User getUserByEmail(String email) {
-    return this.collection.find(Filters.eq(User.EMAIL, email))
-        .projection(Projections.include(User.projection()))
-        .map(document -> this.map(document, User.class))
-        .first();
-  }
-
-  public User getUser(UUID uniqueId) {
-    return this.collection.find(Filters.eq(User.ID, uniqueId.toString()))
-        .projection(Projections.include(User.projection()))
-        .map(document -> this.map(document, User.class))
+  public <Y extends Model> Y byEmail(String email, Class<Y> type) {
+    return wrapped(
+        this.collection.find(Filters.eq(User.EMAIL, email)),
+        type
+    )
         .first();
   }
 
   public void addPermission(UUID uniqueId, String name, String context) {
-    User user = getUser(uniqueId);
+    User user = byId(uniqueId.toString(), User.class);
     if (user == null) {
       throw new MissingUserException("MISSING_USER");
     }
@@ -72,7 +79,7 @@ public class UserDataSource implements DataSource {
   }
 
   public void deletePermission(UUID uniqueId, String name, String context) {
-    User user = getUser(uniqueId);
+    User user = byId(uniqueId.toString(), User.class);
     if (user == null) {
       throw new MissingUserException("MISSING_USER");
     }
