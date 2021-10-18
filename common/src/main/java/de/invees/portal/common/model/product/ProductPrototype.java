@@ -1,6 +1,7 @@
 package de.invees.portal.common.model.product;
 
 import com.google.gson.annotations.SerializedName;
+import de.invees.portal.common.model.Display;
 import de.invees.portal.common.model.Model;
 import lombok.Data;
 
@@ -10,7 +11,7 @@ public class ProductPrototype implements Model {
   @SerializedName("_id")
   private final String id;
   private final String name;
-  private final String displayName;
+  private final Display displayName;
 
   public static String[] projection() {
     return new String[]{

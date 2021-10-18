@@ -1,5 +1,6 @@
 package de.invees.portal.core.controller.invoice;
 
+import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.ConnectionService;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.exception.UnauthorizedException;
@@ -9,6 +10,7 @@ import de.invees.portal.common.model.user.permission.PermissionType;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.service.LazyLoad;
 import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.controller.ControllerUtils;
 import spark.Request;
 import spark.Response;
 
@@ -21,19 +23,18 @@ public class InvoiceController {
   private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
 
   public InvoiceController() {
-    get("/invoice/", this::getInvoices);
+    get("/invoice/", this::list);
   }
 
-  public Object getInvoices(Request req, Response resp) {
+  public Object list(Request req, Response resp) {
     if (req.queryParams("userId") != null) {
-      System.out.println(req.queryParams("userId"));
-      return getInvoicesForUser(req, resp);
+      return listForUser(req, resp);
     } else {
-      return getAllInvoices(req, resp);
+      return listAll(req, resp);
     }
   }
 
-  private Object getInvoicesForUser(Request req, Response resp) {
+  private Object listForUser(Request req, Response resp) {
     User user = TokenUtils.parseToken(req);
     if(user == null) {
       throw new UnauthorizedException("UNAUTHORIZED");
@@ -42,10 +43,12 @@ public class InvoiceController {
     if (!user.isPermitted(PermissionType.VIEW_USER_INVOICES, userId.toString()) && !userId.equals(user.getId())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    return GsonUtils.GSON.toJson(invoiceDataSource().listForUser(userId, Invoice.class));
+    return GsonUtils.GSON.toJson(
+        ControllerUtils.list(invoiceDataSource(), req, Invoice.class, Filters.eq(Invoice.USER_ID, userId.toString()))
+    );
   }
 
-  private Object getAllInvoices(Request req, Response resp) {
+  private Object listAll(Request req, Response resp) {
     User user = TokenUtils.parseToken(req);
     if(user == null) {
       throw new UnauthorizedException("UNAUTHORIZED");
@@ -53,7 +56,9 @@ public class InvoiceController {
     if (!user.isPermitted(PermissionType.VIEW_USER_INVOICES, "*")) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    return GsonUtils.GSON.toJson(invoiceDataSource().list(Invoice.class));
+    return GsonUtils.GSON.toJson(
+        ControllerUtils.list(invoiceDataSource(), req, Invoice.class)
+    );
   }
 
   private InvoiceDataSource invoiceDataSource() {

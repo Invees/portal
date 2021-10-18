@@ -32,12 +32,12 @@ public class UserController {
   private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
 
   public UserController() {
-    get("/user/", this::getLocalUser);
+    get("/user/", this::localUser);
     post("/user/", this::register);
-    post("/user/authenticate/", this::login);
+    post("/user/authenticate/", this::authenticate);
   }
 
-  public Object getLocalUser(Request req, Response resp) {
+  public Object localUser(Request req, Response resp) {
     return GsonUtils.GSON.toJson(
         TokenUtils.parseToken(req)
     );
@@ -95,7 +95,7 @@ public class UserController {
     return GsonUtils.GSON.toJson(user);
   }
 
-  public Object login(Request req, Response resp) {
+  public Object authenticate(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     if (body.get("email") == null || body.get("email").isJsonNull()) {
       throw new UnauthorizedException("INVALID_USER_PASSWORD");

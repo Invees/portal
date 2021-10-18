@@ -1,6 +1,7 @@
 package de.invees.portal.common.model.product;
 
 import com.google.gson.annotations.SerializedName;
+import de.invees.portal.common.model.Display;
 import de.invees.portal.common.model.product.price.ProductPrice;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.product.field.ProductFieldValue;
@@ -22,7 +23,7 @@ public class Product implements Model {
   @SerializedName("_id")
   private final String id;
   private final String sectionId;
-  private final String displayName;
+  private final Display displayName;
   private final String description;
   private final Map<String, ProductFieldValue> fields;
   private final ProductPrice price;

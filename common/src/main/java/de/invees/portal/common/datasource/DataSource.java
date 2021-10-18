@@ -45,15 +45,36 @@ public interface DataSource<T> {
         .first();
   }
 
-  default <Y extends Model> List<Y> list(Class<Y> type) {
-    return wrapped(getCollection().find(listFilter()), type)
-        .into(new ArrayList<>());
+  default <Y extends Model> PagedResponse<Y> list(Class<Y> type, Bson customFilters) {
+    return new PagedResponse(
+        -1,
+        wrapped(getCollection().find(customFilters), type)
+            .into(new ArrayList<>())
+    );
+  }
+
+  default <Y extends Model> PagedResponse<Y> list(Class<Y> type) {
+    return new PagedResponse(
+        -1,
+        wrapped(getCollection().find(listFilter()), type)
+            .into(new ArrayList<>())
+    );
+  }
+
+  default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type, Bson customFilters) {
+    return new PagedResponse(
+        this.getCollection().countDocuments(customFilters),
+        wrapped(this.getCollection().find(customFilters)
+            .skip(skip)
+            .limit(limit), type)
+            .into(new ArrayList<>())
+    );
   }
 
   default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type) {
     return new PagedResponse(
         this.getCollection().countDocuments(listFilter()),
-        wrapped(this.getCollection().find()
+        wrapped(this.getCollection().find(listFilter())
             .skip(skip)
             .limit(limit), type)
             .into(new ArrayList<>())

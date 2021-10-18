@@ -2,6 +2,7 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import de.invees.portal.common.datasource.response.PagedResponse;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.datasource.DataSource;
@@ -31,15 +32,18 @@ public class ProductDataSource implements DataSource<Product> {
     return Filters.eq(Section.ACTIVE, true);
   }
 
-  public <Y extends Model> List<Y> listForSection(String sectionId, Class<Y> type) {
-    return wrapped(
-        collection.find(Filters.and(
-            Filters.eq(Product.SECTION_ID, sectionId),
-            Filters.eq(Section.ACTIVE, true)
-        )),
-        type
-    )
-        .into(new ArrayList<>());
+  public <Y extends Model> PagedResponse<Y> listForSection(String sectionId, Class<Y> type) {
+    return new PagedResponse<>(
+        -1,
+        wrapped(
+            collection.find(Filters.and(
+                Filters.eq(Product.SECTION_ID, sectionId),
+                Filters.eq(Section.ACTIVE, true)
+            )),
+            type
+        )
+            .into(new ArrayList<>())
+    );
   }
 
 }

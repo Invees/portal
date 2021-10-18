@@ -1,5 +1,6 @@
 package de.invees.portal.common.model.section.configuration;
 
+import de.invees.portal.common.model.Display;
 import lombok.Data;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public class SectionConfigurationEntry {
 
   private final String key;
-  private final String displayName;
+  private final Display displayName;
   private final List<SectionConfigurationEntryOption> options;
 
 }

@@ -1,6 +1,7 @@
 package de.invees.portal.common.model.section;
 
 import com.google.gson.annotations.SerializedName;
+import de.invees.portal.common.model.Display;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.section.configuration.SectionConfigurationEntry;
 import de.invees.portal.common.model.section.header.SectionHeader;
@@ -22,8 +23,8 @@ public class Section implements Model {
 
   @SerializedName("_id")
   private final String id;
-  private final String displayName;
-  private final String description;
+  private final Display displayName;
+  private final Display description;
   private final List<SectionHeader> structure;
   private final List<SectionConfigurationEntry> configuration;
   private final List<SectionTag> tags;

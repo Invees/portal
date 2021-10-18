@@ -7,6 +7,13 @@ public class InputUtils {
 
   public static Pattern PATTERN = Pattern.compile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$");
 
+  public static int integerByString(String data, int defaultValue) {
+    try {
+      return Integer.valueOf(data);
+    } catch (Exception e) {
+      return defaultValue;
+    }
+  }
 
   public static boolean isInvalidEmailAddress(String email) {
     if (isEmpty(email)) {

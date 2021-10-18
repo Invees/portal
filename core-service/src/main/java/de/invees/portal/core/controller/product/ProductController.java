@@ -15,15 +15,15 @@ public class ProductController {
   private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
 
   public ProductController() {
-    get("/product/", this::getProducts);
-    get("/product/:productId/", this::getProduct);
+    get("/product/", this::list);
+    get("/product/:productId/", this::byId);
   }
 
-  private Object getProduct(Request req, Response res) {
+  private Object byId(Request req, Response res) {
     return GsonUtils.GSON.toJson(product(req.params("productId")));
   }
 
-  public Object getProducts(Request req, Response resp) {
+  public Object list(Request req, Response resp) {
     return GsonUtils.GSON.toJson(productDataSource().list(Product.class));
   }
 

@@ -32,12 +32,4 @@ public class InvoiceDataSource implements DataSource<Invoice> {
     return null;
   }
 
-  public <Y extends Model> List<Y> listForUser(UUID userId, Class<Y> type) {
-    return wrapped(
-        this.collection.find(Filters.eq(Invoice.USER_ID, userId.toString())),
-        type
-    )
-        .into(new ArrayList<>());
-  }
-
 }

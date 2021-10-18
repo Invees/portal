@@ -43,7 +43,7 @@ public class TokenUtils {
     if (!authentication.getData().get("address").equals(request.ip())) {
       return null;
     }
-    return userDataSource().byId(authentication.getUserId(), User.class);
+    return userDataSource().byId(authentication.getUserId().toString(), User.class);
   }
 
   private static UserDataSource userDataSource() {

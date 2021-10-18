@@ -18,20 +18,20 @@ public class SectionController {
   private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
 
   public SectionController() {
-    get("/section/", this::getSections);
-    get("/section/:sectionId/", this::getSection);
-    get("/section/:sectionId/product/", this::getProductsForSection);
+    get("/section/", this::list);
+    get("/section/:sectionId/", this::byId);
+    get("/section/:sectionId/product/", this::listForSection);
   }
 
-  public Object getSections(Request req, Response resp) {
+  public Object list(Request req, Response resp) {
     return GsonUtils.GSON.toJson(sectionDataSource().list(Section.class));
   }
 
-  public Object getSection(Request req, Response resp) {
+  public Object byId(Request req, Response resp) {
     return GsonUtils.GSON.toJson(section(req.params("sectionId")));
   }
 
-  private Object getProductsForSection(Request req, Response resp) {
+  private Object listForSection(Request req, Response resp) {
     Section section = section(req.params("sectionId"));
     if (section == null) {
       throw new InputException("INVALID_SECTION");
