@@ -19,7 +19,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>3.12.8</version>
+            <version>3.12.10</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -30,6 +30,11 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>html2pdf</artifactId>
             <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.paypal.sdk</groupId>
+            <artifactId>checkout-sdk</artifactId>
+            <version>1.0.5</version>
         </dependency>
     </dependencies>
 </project>

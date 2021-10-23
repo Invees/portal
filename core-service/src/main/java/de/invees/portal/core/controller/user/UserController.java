@@ -9,7 +9,7 @@ import de.invees.portal.common.model.user.UserAuthenticationType;
 import de.invees.portal.common.utils.service.LazyLoad;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.core.utils.input.InputUtils;
+import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.common.utils.security.SecurityUtils;
 import de.invees.portal.core.utils.TokenUtils;
 import de.invees.portal.common.datasource.ConnectionService;
@@ -79,7 +79,10 @@ public class UserController {
     if (InputUtils.isEmpty((user.getAddress()))) {
       throw new UserCreationException("MISSING_ADDRESS");
     }
-    String salt = SecurityUtils.generateSalt(new Random().nextInt(50));
+    if (InputUtils.isEmpty((user.getCountry()))) {
+      throw new UserCreationException("MISSING_COUNTRY");
+    }
+    String salt = SecurityUtils.generateSalt(40);
 
     userDataSource().createDisplayUser(user);
     userAuthenticationDataSource().create(new UserAuthentication(

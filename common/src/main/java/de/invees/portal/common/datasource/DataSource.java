@@ -46,25 +46,45 @@ public interface DataSource<T> {
   }
 
   default <Y extends Model> PagedResponse<Y> list(Class<Y> type, Bson customFilters) {
+    return this.list(type, customFilters, null);
+  }
+
+  default <Y extends Model> PagedResponse<Y> list(Class<Y> type, Bson customFilters, Bson sort) {
+    FindIterable<Document> iterable;
+    if(customFilters != null) {
+      iterable = this.getCollection().find(customFilters);
+    } else {
+      iterable = this.getCollection().find();
+    }
+    if(sort != null) {
+      iterable.sort(sort);
+    }
+
     return new PagedResponse(
         -1,
-        wrapped(getCollection().find(customFilters), type)
+        wrapped(iterable, type)
             .into(new ArrayList<>())
     );
   }
 
   default <Y extends Model> PagedResponse<Y> list(Class<Y> type) {
-    return new PagedResponse(
-        -1,
-        wrapped(getCollection().find(listFilter()), type)
-            .into(new ArrayList<>())
-    );
+    return this.list(type, listFilter(), null);
   }
 
-  default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type, Bson customFilters) {
+  default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type, Bson customFilters, Bson sort) {
+    FindIterable<Document> iterable;
+    if(customFilters != null) {
+      iterable = this.getCollection().find(customFilters);
+    } else {
+      iterable = this.getCollection().find();
+    }
+    if(sort != null) {
+      iterable.sort(sort);
+    }
     return new PagedResponse(
         this.getCollection().countDocuments(customFilters),
-        wrapped(this.getCollection().find(customFilters)
+        wrapped(iterable
+            .sort(sort)
             .skip(skip)
             .limit(limit), type)
             .into(new ArrayList<>())
@@ -72,13 +92,7 @@ public interface DataSource<T> {
   }
 
   default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type) {
-    return new PagedResponse(
-        this.getCollection().countDocuments(listFilter()),
-        wrapped(this.getCollection().find(listFilter())
-            .skip(skip)
-            .limit(limit), type)
-            .into(new ArrayList<>())
-    );
+    return this.listPaged(skip, limit, type, listFilter(), null);
   }
 
   default Document map(Object object) {
@@ -96,13 +110,13 @@ public interface DataSource<T> {
     this.getCollection().insertOne(this.map(object));
   }
 
-  default int nextSequence() {
+  default long nextSequence() {
     BasicDBObject find = new BasicDBObject();
     find.put("_id", this.getCollection().getNamespace().getCollectionName());
     BasicDBObject update = new BasicDBObject();
     update.put("$inc", new BasicDBObject("seq", 1));
     Document obj = getSequenceCollection().findOneAndUpdate(find, update);
-    return obj.get("seq", Integer.class);
+    return obj.get("seq", Long.class);
   }
 
   default void createSequence() {

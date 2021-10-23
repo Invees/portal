@@ -1,11 +1,13 @@
 package de.invees.portal.common.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class Display {
 
-  private final String de;
-  private final String en;
+  private  String de;
+  private  String en;
 
 }

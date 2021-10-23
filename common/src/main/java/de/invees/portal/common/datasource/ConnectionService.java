@@ -6,6 +6,11 @@ import de.invees.portal.common.configuration.DataSourceConfiguration;
 import de.invees.portal.common.datasource.mongodb.*;
 import de.invees.portal.common.utils.service.Service;
 import lombok.NonNull;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.BinaryCodec;
+import org.bson.codecs.UuidCodec;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +22,11 @@ public class ConnectionService implements Service {
   private final MongoDatabase database;
 
   public ConnectionService(DataSourceConfiguration dataSource) {
+    CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+        CodecRegistries.fromCodecs(new BinaryCodec()),
+        MongoClient.getDefaultCodecRegistry()
+    );
+
     client = new MongoClient(
         new ServerAddress(dataSource.getHost(), dataSource.getPort()),
         MongoCredential.createCredential(
@@ -24,6 +34,7 @@ public class ConnectionService implements Service {
             dataSource.getAuthDatabase(),
             dataSource.getPassword().toCharArray()),
         new MongoClientOptions.Builder()
+            .codecRegistry(codecRegistry)
             .connectTimeout(dataSource.getConnectTimeout())
             .socketTimeout(dataSource.getSocketTimeOut())
             .maxConnectionIdleTime(dataSource.getMaxConnectionIdleTime())
@@ -41,6 +52,8 @@ public class ConnectionService implements Service {
     dataSourceMap.put(UserAuthenticationDataSource.class, new UserAuthenticationDataSource());
     dataSourceMap.put(OrderDataSource.class, new OrderDataSource());
     dataSourceMap.put(InvoiceDataSource.class, new InvoiceDataSource());
+    dataSourceMap.put(InvoiceFileDataSource.class, new InvoiceFileDataSource());
+    dataSourceMap.put(GatewayDataSource.class, new GatewayDataSource());
 
     dataSourceMap.forEach((k, d) -> d.init(
         database.getCollection(k.getSimpleName().replace("DataSource", "")),

@@ -1,16 +1,25 @@
 package de.invees.portal.common.model.invoice;
 
 import com.google.gson.annotations.SerializedName;
+import de.invees.portal.common.model.Model;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.UUID;
-
 @Data
-public class InvoiceFile {
+@AllArgsConstructor
+public class InvoiceFile implements Model {
+
+  public static String ID = "_id";
+  public static String DATA = "data";
 
   @SerializedName("_id")
-  private final UUID id;
-  private final UUID invoiceId;
-  private final byte[] file;
+  private long id;
+  private byte[] data;
 
+  public static String[] projection() {
+    return new String[]{
+        ID,
+        DATA,
+    };
+  }
 }

@@ -14,6 +14,7 @@ public class CalculationException extends IllegalArgumentException {
   public JsonObject json() {
     JsonObject response = new JsonObject();
     response.addProperty("result", "error");
+    response.addProperty("responseTime", System.currentTimeMillis());
     response.addProperty("message", msg);
     return response;
   }
