@@ -18,7 +18,7 @@ public class Product implements Model {
   public static String DISPLAY_NAME = "displayName";
   public static String DESCRIPTION = "displayName";
   public static String SECTION_ID = "sectionId";
-  public static String FIELDS = "fields";
+  public static String FIELD_LIST = "fieldList";
   public static String PRICE = "price";
   public static String ACTIVE = "active";
 
@@ -27,7 +27,7 @@ public class Product implements Model {
   private String sectionId;
   private Display displayName;
   private String description;
-  private Map<String, ProductFieldValue> fields;
+  private Map<String, ProductFieldValue> fieldList;
   private ProductPrice price;
   private boolean active;
 
@@ -37,7 +37,7 @@ public class Product implements Model {
         DISPLAY_NAME,
         DESCRIPTION,
         SECTION_ID,
-        FIELDS,
+        FIELD_LIST,
         PRICE,
         ACTIVE
     };

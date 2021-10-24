@@ -10,6 +10,6 @@ import java.util.List;
 public class ProductPrice {
 
   private double amount;
-  private List<OneOffPrice> oneOff;
+  private List<OneOffPrice> oneOffList;
 
 }

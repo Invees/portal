@@ -14,6 +14,6 @@ public class Permission implements Model {
   public static String CONTEXT = "context";
 
   private String name;
-  private List<String> context;
+  private List<String> contextList;
 
 }

@@ -70,9 +70,9 @@ public class UserDataSource implements DataSource<User> {
     Permission permission = user.getPermission(name);
     if (permission == null) {
       permission = new Permission(name, List.of(context));
-      user.getPermissions().add(permission);
+      user.getPermissionList().add(permission);
     } else {
-      permission.getContext().add(context);
+      permission.getContextList().add(context);
     }
     this.collection.replaceOne(Filters.eq(User.ID, user.getId()), this.map(user));
   }
@@ -87,9 +87,9 @@ public class UserDataSource implements DataSource<User> {
       return;
     }
     if (context == null) {
-      user.getPermissions().remove(permission);
+      user.getPermissionList().remove(permission);
     } else {
-      permission.getContext().remove(context);
+      permission.getContextList().remove(context);
     }
     this.collection.replaceOne(Filters.eq(User.ID, user.getId()), this.map(user));
   }

@@ -18,6 +18,6 @@ public class InvoicePosition {
   private double price;
   private double priceWithAddons;
   private OrderRequest orderRequest;
-  private List<InvoicePosition> positions;
+  private List<InvoicePosition> positionList;
 
 }

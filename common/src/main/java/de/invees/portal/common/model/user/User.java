@@ -20,7 +20,7 @@ public class User implements Model {
   public static String EMAIL = "email";
   public static String PHONE = "phone";
   public static String COMPANY_NAME = "companyName";
-  public static String PERMISSIONS = "permissions";
+  public static String PERMISSION_LIST = "permissionList";
   public static String POST_CODE = "postCode";
   public static String CITY = "city";
   public static String COUNTRY = "country";
@@ -38,7 +38,7 @@ public class User implements Model {
   private String city;
   private String address;
   private String country;
-  private List<Permission> permissions;
+  private List<Permission> permissionList;
 
   public static String[] projection() {
     return new String[]{
@@ -48,7 +48,7 @@ public class User implements Model {
         LAST_NAME,
         EMAIL,
         PHONE,
-        PERMISSIONS,
+        PERMISSION_LIST,
         POST_CODE,
         CITY,
         ADDRESS,
@@ -62,14 +62,14 @@ public class User implements Model {
     if (permission == null) {
       return false;
     }
-    return permission.getContext().contains(context);
+    return permission.getContextList().contains(context);
   }
 
   public Permission getPermission(String name) {
-    if (permissions == null) {
+    if (permissionList == null) {
       return null;
     }
-    for (Permission permission : permissions) {
+    for (Permission permission : permissionList) {
       if (permission.getName().equalsIgnoreCase(name)) {
         return permission;
       }

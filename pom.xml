@@ -11,6 +11,7 @@
     <modules>
         <module>core-service</module>
         <module>common</module>
+        <module>processing-service</module>
     </modules>
 
     <properties>

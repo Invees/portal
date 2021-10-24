@@ -13,6 +13,6 @@ import java.util.List;
 public class SectionHeader implements Model {
 
   private Display displayName;
-  private List<SectionField> fields;
+  private List<SectionField> fieldList;
 
 }
