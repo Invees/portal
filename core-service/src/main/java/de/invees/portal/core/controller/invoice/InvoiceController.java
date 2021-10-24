@@ -4,15 +4,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import com.paypal.orders.Order;
 import de.invees.portal.common.datasource.ConnectionService;
-import de.invees.portal.common.datasource.mongodb.GatewayDataSource;
+import de.invees.portal.common.datasource.mongodb.GatewayDataDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceFileDataSource;
+import de.invees.portal.common.datasource.mongodb.OrderDataSource;
 import de.invees.portal.common.exception.UnauthorizedException;
+import de.invees.portal.common.model.gateway.GatewayData;
+import de.invees.portal.common.model.gateway.GatewayDataType;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.invoice.InvoiceFile;
 import de.invees.portal.common.model.invoice.InvoiceStatus;
+import de.invees.portal.common.model.order.Order;
+import de.invees.portal.common.model.order.OrderStatus;
 import de.invees.portal.common.model.user.permission.PermissionType;
 import de.invees.portal.common.gateway.paypal.PayPalGatewayService;
 import de.invees.portal.common.utils.gson.GsonUtils;
@@ -25,6 +29,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import static spark.Spark.get;
@@ -48,8 +53,9 @@ public class InvoiceController extends Controller {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     JsonObject object = JsonParser.parseString(req.body()).getAsJsonObject();
-    Order orderResponse = payPalGateway().validate(object.get("orderId").getAsString()).result();
-    if (!orderResponse.purchaseUnits().get(0).invoiceId().equalsIgnoreCase(invoice.getId() + "")) {
+    com.paypal.orders.Order orderResponse = payPalGateway().validate(object.get("orderId").getAsString()).result();
+
+    if (!orderResponse.purchaseUnits().get(0).referenceId().equalsIgnoreCase(invoice.getId() + "")) {
       Application.LOGGER.error("------------------------------------");
       Application.LOGGER.error("Invalid invoice for payment. Did the user tryed to d some illegal stuff?");
       Application.LOGGER.error("orderResponse = " + GsonUtils.toJson(orderResponse));
@@ -61,7 +67,19 @@ public class InvoiceController extends Controller {
     if (orderResponse.status().equalsIgnoreCase("COMPLETED")) {
       invoice.setStatus(InvoiceStatus.PAID);
       invoiceDataSource().update(invoice);
-      gatewayDataSource().create(orderResponse);
+      gatewayDataSource().create(new GatewayData(
+          UUID.randomUUID(),
+          GatewayDataType.PAYPAL,
+          orderResponse
+      ));
+      List<Order> orders = orderDataSource().
+          list(Order.class, Filters.eq(Order.INVOICE_ID, invoice.getId()))
+          .getItems();
+
+      for (Order order : orders) {
+        order.setStatus(OrderStatus.PROCESSING);
+        orderDataSource().update(order);
+      }
       // NOW WE SEND A NATS MESSAGE TO CREATE THE SERVICES FROM ORDERS
     }
     return GsonUtils.toJson(orderResponse);
@@ -139,6 +157,10 @@ public class InvoiceController extends Controller {
     );
   }
 
+  private OrderDataSource orderDataSource() {
+    return this.connection.get().access(OrderDataSource.class);
+  }
+
   private InvoiceDataSource invoiceDataSource() {
     return this.connection.get().access(InvoiceDataSource.class);
   }
@@ -147,8 +169,8 @@ public class InvoiceController extends Controller {
     return this.connection.get().access(InvoiceFileDataSource.class);
   }
 
-  private GatewayDataSource gatewayDataSource() {
-    return this.connection.get().access(GatewayDataSource.class);
+  private GatewayDataDataSource gatewayDataSource() {
+    return this.connection.get().access(GatewayDataDataSource.class);
   }
 
   private PayPalGatewayService payPalGateway() {

@@ -2,6 +2,7 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.order.Order;
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.model.product.Product;
@@ -28,4 +29,10 @@ public class OrderDataSource implements DataSource<Order> {
     return null;
   }
 
+  public void update(Order order) {
+    this.getCollection().replaceOne(
+        Filters.eq(Order.ID, order.getId().toString()),
+        this.map(order)
+    );
+  }
 }

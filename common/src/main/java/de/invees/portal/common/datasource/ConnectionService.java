@@ -6,9 +6,7 @@ import de.invees.portal.common.configuration.DataSourceConfiguration;
 import de.invees.portal.common.datasource.mongodb.*;
 import de.invees.portal.common.utils.service.Service;
 import lombok.NonNull;
-import org.bson.UuidRepresentation;
 import org.bson.codecs.BinaryCodec;
-import org.bson.codecs.UuidCodec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
@@ -53,7 +51,7 @@ public class ConnectionService implements Service {
     dataSourceMap.put(OrderDataSource.class, new OrderDataSource());
     dataSourceMap.put(InvoiceDataSource.class, new InvoiceDataSource());
     dataSourceMap.put(InvoiceFileDataSource.class, new InvoiceFileDataSource());
-    dataSourceMap.put(GatewayDataSource.class, new GatewayDataSource());
+    dataSourceMap.put(GatewayDataDataSource.class, new GatewayDataDataSource());
 
     dataSourceMap.forEach((k, d) -> d.init(
         database.getCollection(k.getSimpleName().replace("DataSource", "")),
