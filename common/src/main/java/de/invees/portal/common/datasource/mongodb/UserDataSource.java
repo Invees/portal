@@ -2,14 +2,13 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
+import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.exception.MissingUserException;
 import de.invees.portal.common.exception.UserCreationException;
 import de.invees.portal.common.model.Model;
+import de.invees.portal.common.model.user.DisplayUser;
 import de.invees.portal.common.model.user.User;
 import de.invees.portal.common.model.user.permission.Permission;
-import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.user.DisplayUser;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;

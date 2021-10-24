@@ -12,8 +12,8 @@ import java.util.UUID;
 public class Service implements Model {
 
   @SerializedName("_id")
-  private  UUID id;
-  private  UUID userId;
-  private  UUID orderId;
+  private UUID id;
+  private UUID userId;
+  private UUID orderId;
 
 }

@@ -10,8 +10,8 @@ import java.util.List;
 @AllArgsConstructor
 public class SectionConfigurationEntry {
 
-  private  String key;
-  private  Display displayName;
-  private  List<SectionConfigurationEntryOption> options;
+  private String key;
+  private Display displayName;
+  private List<SectionConfigurationEntryOption> options;
 
 }

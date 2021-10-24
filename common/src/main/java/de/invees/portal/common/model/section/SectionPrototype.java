@@ -11,8 +11,8 @@ import lombok.Data;
 public class SectionPrototype implements Model {
 
   @SerializedName("_id")
-  private  String id;
-  private  Display displayName;
+  private String id;
+  private Display displayName;
 
   public static String[] projection() {
     return new String[]{

@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SectionHeader implements Model {
 
-  private  Display displayName;
-  private  List<SectionField> fields;
+  private Display displayName;
+  private List<SectionField> fields;
 
 }

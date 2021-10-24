@@ -10,10 +10,10 @@ import java.util.List;
 @AllArgsConstructor
 public class Permission implements Model {
 
-  public static  String NAME = "name";
-  public static  String CONTEXT = "context";
+  public static String NAME = "name";
+  public static String CONTEXT = "context";
 
-  private  String name;
-  private  List<String> context;
+  private String name;
+  private List<String> context;
 
 }

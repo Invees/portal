@@ -8,8 +8,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class SectionConfigurationEntryOption {
 
-  private  Object value;
-  private  Display displayValue;
-  private  double price;
+  private Object value;
+  private Display displayValue;
+  private double price;
 
 }

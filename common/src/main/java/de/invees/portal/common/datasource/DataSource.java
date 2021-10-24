@@ -17,7 +17,6 @@ import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public interface DataSource<T> {
 
@@ -51,12 +50,12 @@ public interface DataSource<T> {
 
   default <Y extends Model> PagedResponse<Y> list(Class<Y> type, Bson customFilters, Bson sort) {
     FindIterable<Document> iterable;
-    if(customFilters != null) {
+    if (customFilters != null) {
       iterable = this.getCollection().find(customFilters);
     } else {
       iterable = this.getCollection().find();
     }
-    if(sort != null) {
+    if (sort != null) {
       iterable.sort(sort);
     }
 
@@ -73,12 +72,12 @@ public interface DataSource<T> {
 
   default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type, Bson customFilters, Bson sort) {
     FindIterable<Document> iterable;
-    if(customFilters != null) {
+    if (customFilters != null) {
       iterable = this.getCollection().find(customFilters);
     } else {
       iterable = this.getCollection().find();
     }
-    if(sort != null) {
+    if (sort != null) {
       iterable.sort(sort);
     }
     return new PagedResponse(

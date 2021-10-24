@@ -1,18 +1,18 @@
 package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
-import de.invees.portal.common.model.Display;
-import de.invees.portal.common.model.invoice.InvoiceStatus;
-import de.invees.portal.common.model.price.Price;
-import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.datasource.ConnectionService;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
+import de.invees.portal.common.datasource.mongodb.UserDataSource;
 import de.invees.portal.common.exception.CalculationException;
-import de.invees.portal.common.model.order.request.OrderRequest;
+import de.invees.portal.common.model.Display;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.invoice.InvoicePosition;
+import de.invees.portal.common.model.invoice.InvoiceStatus;
+import de.invees.portal.common.model.order.request.OrderRequest;
+import de.invees.portal.common.model.price.Price;
+import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.model.product.price.OneOffPrice;
 import de.invees.portal.common.model.section.Section;
 import de.invees.portal.common.model.section.configuration.SectionConfigurationEntry;

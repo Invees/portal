@@ -12,16 +12,16 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserAuthentication implements Model {
 
-  public static  String ID = "_id";
-  public static  String USER_ID = "userId";
-  public static  String TYPE = "type";
-  public static  String DATA = "data";
+  public static String ID = "_id";
+  public static String USER_ID = "userId";
+  public static String TYPE = "type";
+  public static String DATA = "data";
 
   @SerializedName("_id")
-  private  UUID id;
-  private  UUID userId;
-  private  UserAuthenticationType type;
-  private  Map<String, Object> data;
+  private UUID id;
+  private UUID userId;
+  private UserAuthenticationType type;
+  private Map<String, Object> data;
 
   public static String[] projection() {
     return new String[]{

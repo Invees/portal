@@ -11,9 +11,9 @@ import lombok.Data;
 public class ProductPrototype implements Model {
 
   @SerializedName("_id")
-  private  String id;
-  private  String name;
-  private  Display displayName;
+  private String id;
+  private String name;
+  private Display displayName;
 
   public static String[] projection() {
     return new String[]{

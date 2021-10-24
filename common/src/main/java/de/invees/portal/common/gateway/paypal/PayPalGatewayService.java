@@ -1,10 +1,5 @@
 package de.invees.portal.common.gateway.paypal;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.paypal.core.PayPalEnvironment;
 import com.paypal.core.PayPalHttpClient;
 import com.paypal.http.HttpResponse;
@@ -12,6 +7,11 @@ import com.paypal.orders.*;
 import de.invees.portal.common.configuration.PayPalConfiguration;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.utils.service.Service;
+
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PayPalGatewayService implements Service {
 

@@ -11,13 +11,13 @@ import java.util.List;
 @AllArgsConstructor
 public class InvoicePosition {
 
-  private  Display displayName;
-  private  Display displayValue;
-  private  Object value;
-  private  String key;
-  private  double price;
-  private  double priceWithAddons;
-  private  OrderRequest orderRequest;
-  private  List<InvoicePosition> positions;
+  private Display displayName;
+  private Display displayValue;
+  private Object value;
+  private String key;
+  private double price;
+  private double priceWithAddons;
+  private OrderRequest orderRequest;
+  private List<InvoicePosition> positions;
 
 }
