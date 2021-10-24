@@ -1,11 +1,14 @@
 package de.invees.portal.common.model.product.field;
 
+import de.invees.portal.common.model.Display;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class ProductFieldValue {
 
-  private final String displayValue;
-  private final Object value;
+  private  Display displayValue;
+  private  Object value;
 
 }

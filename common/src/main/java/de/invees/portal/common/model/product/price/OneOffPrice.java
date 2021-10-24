@@ -1,11 +1,13 @@
 package de.invees.portal.common.model.product.price;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class OneOffPrice {
 
-  private final double amount;
-  private final int contractTerm;
+  private  double amount;
+  private  int contractTerm;
 
 }

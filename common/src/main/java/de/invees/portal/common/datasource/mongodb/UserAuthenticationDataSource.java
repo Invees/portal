@@ -2,51 +2,55 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
 import de.invees.portal.common.datasource.DataSource;
+import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.user.UserAuthentication;
 import de.invees.portal.common.model.user.UserAuthenticationType;
 import lombok.Getter;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class UserAuthenticationDataSource implements DataSource {
+public class UserAuthenticationDataSource implements DataSource<UserAuthentication> {
 
   @Getter
   private MongoCollection<Document> collection;
+  @Getter
+  private MongoCollection<Document> sequenceCollection;
 
   @Override
-  public void init(MongoCollection<Document> collection) {
+  public void init(MongoCollection<Document> collection, MongoCollection<Document> sequenceCollection) {
     this.collection = collection;
+    this.sequenceCollection = sequenceCollection;
   }
 
-  public void create(UserAuthentication userAuthentication) {
-    this.collection.insertOne(this.map(userAuthentication));
+  @Override
+  public Bson listFilter() {
+    return null;
   }
 
-  public List<UserAuthentication> getAuthenticationForUser(UUID userId, UserAuthenticationType type) {
-    return this.collection.find(
-            Filters.and(
-                Filters.eq(UserAuthentication.USER_ID, userId.toString()),
-                Filters.eq(UserAuthentication.TYPE, type.toString())
-            )
-        )
-        .projection(Projections.include(UserAuthentication.projection()))
-        .map(document -> this.map(document, UserAuthentication.class))
+  public <Y extends Model> List<Y> byUser(UUID userId, UserAuthenticationType authenticationType, Class<Y> type) {
+    return wrapped(
+        collection.find(Filters.and(
+            Filters.eq(UserAuthentication.USER_ID, userId.toString()),
+            Filters.eq(UserAuthentication.TYPE, authenticationType.toString())
+        )),
+        type
+    )
         .into(new ArrayList<>());
   }
 
-  public UserAuthentication getAuthentication(String token) {
-    return this.collection.find(
-            Filters.and(
-                Filters.eq(UserAuthentication.TYPE, UserAuthenticationType.TOKEN.toString()),
-                Filters.eq(UserAuthentication.DATA + "." + "token", token)
-            ))
-        .projection(Projections.include(UserAuthentication.projection()))
-        .map(document -> this.map(document, UserAuthentication.class))
+  public <Y extends Model> Y getAuthentication(String token, Class<Y> type) {
+    return wrapped(
+        collection.find(Filters.and(
+            Filters.eq(UserAuthentication.TYPE, UserAuthenticationType.TOKEN.toString()),
+            Filters.eq(UserAuthentication.DATA + "." + "token", token)
+        )),
+        type
+    )
         .first();
   }
 }

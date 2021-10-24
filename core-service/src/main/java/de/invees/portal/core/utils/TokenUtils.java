@@ -33,14 +33,17 @@ public class TokenUtils {
     if (parsedToken == null || parsedToken.equalsIgnoreCase("") || token.equalsIgnoreCase("null")) {
       return null;
     }
-    UserAuthentication authentication = userAuthenticationDataSource().getAuthentication(parsedToken);
+    UserAuthentication authentication = userAuthenticationDataSource().getAuthentication(
+        parsedToken,
+        UserAuthentication.class
+    );
     if (authentication == null) {
       return null;
     }
     if (!authentication.getData().get("address").equals(request.ip())) {
       return null;
     }
-    return userDataSource().getUser(authentication.getUserId());
+    return userDataSource().byId(authentication.getUserId().toString(), User.class);
   }
 
   private static UserDataSource userDataSource() {

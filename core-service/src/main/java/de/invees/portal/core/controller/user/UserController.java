@@ -9,7 +9,7 @@ import de.invees.portal.common.model.user.UserAuthenticationType;
 import de.invees.portal.common.utils.service.LazyLoad;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.input.InputUtils;
+import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.common.utils.security.SecurityUtils;
 import de.invees.portal.core.utils.TokenUtils;
 import de.invees.portal.common.datasource.ConnectionService;
@@ -32,12 +32,12 @@ public class UserController {
   private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
 
   public UserController() {
-    get("/user/", this::getLocalUser);
+    get("/user/", this::localUser);
     post("/user/", this::register);
-    post("/user/authenticate/", this::login);
+    post("/user/authenticate/", this::authenticate);
   }
 
-  public Object getLocalUser(Request req, Response resp) {
+  public Object localUser(Request req, Response resp) {
     return GsonUtils.GSON.toJson(
         TokenUtils.parseToken(req)
     );
@@ -79,9 +79,12 @@ public class UserController {
     if (InputUtils.isEmpty((user.getAddress()))) {
       throw new UserCreationException("MISSING_ADDRESS");
     }
-    String salt = SecurityUtils.generateSalt(new Random().nextInt(50));
+    if (InputUtils.isEmpty((user.getCountry()))) {
+      throw new UserCreationException("MISSING_COUNTRY");
+    }
+    String salt = SecurityUtils.generateSalt(40);
 
-    userDataSource().create(user);
+    userDataSource().createDisplayUser(user);
     userAuthenticationDataSource().create(new UserAuthentication(
         UUID.randomUUID(),
         user.getId(),
@@ -95,7 +98,7 @@ public class UserController {
     return GsonUtils.GSON.toJson(user);
   }
 
-  public Object login(Request req, Response resp) {
+  public Object authenticate(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     if (body.get("email") == null || body.get("email").isJsonNull()) {
       throw new UnauthorizedException("INVALID_USER_PASSWORD");
@@ -106,14 +109,15 @@ public class UserController {
 
     String email = body.get("email").getAsString();
     String password = body.get("password").getAsString();
-    User user = userDataSource().getUserByEmail(email);
+    User user = userDataSource().byEmail(email, User.class);
     if (user == null) {
       throw new UnauthorizedException("INVALID_USER_PASSWORD");
     }
 
-    List<UserAuthentication> authentications = userAuthenticationDataSource().getAuthenticationForUser(
+    List<UserAuthentication> authentications = userAuthenticationDataSource().byUser(
         user.getId(),
-        UserAuthenticationType.PASSWORD
+        UserAuthenticationType.PASSWORD,
+        UserAuthentication.class
     );
     for (UserAuthentication authentication : authentications) {
       String hashedPassword = SecurityUtils.hash(password, (String) authentication.getData().get("salt"), user.getId());

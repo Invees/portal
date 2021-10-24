@@ -1,5 +1,6 @@
 package de.invees.portal.core;
 
+import de.invees.portal.common.gateway.paypal.PayPalGatewayService;
 import de.invees.portal.core.configuration.Configuration;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.service.ServiceRegistry;
@@ -27,6 +28,7 @@ public class Application {
       return;
     }
     loadDataSource();
+    loadPayPal();
     startWebServer();
   }
 
@@ -49,6 +51,13 @@ public class Application {
             configuration.getDataSource()
         )
     );
+  }
+
+  public void loadPayPal() {
+    LOGGER.info("Loading PayPal Gateway..");
+    ServiceRegistry.register(PayPalGatewayService.class, new PayPalGatewayService(
+        configuration.getPaypal()
+    ));
   }
 
   public void startWebServer() {

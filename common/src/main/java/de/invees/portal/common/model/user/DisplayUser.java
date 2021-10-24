@@ -2,24 +2,27 @@ package de.invees.portal.common.model.user;
 
 import com.google.gson.annotations.SerializedName;
 import de.invees.portal.common.model.Model;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
+@AllArgsConstructor
 public class DisplayUser implements Model {
 
   @SerializedName("_id")
-  private final UUID id;
-  private final String name;
-  private final String firstName;
-  private final String lastName;
-  private final String email;
-  private final String phone;
-  private final String companyName;
-  private final String postCode;
-  private final String city;
-  private final String address;
+  private  UUID id;
+  private  String name;
+  private  String firstName;
+  private  String lastName;
+  private  String email;
+  private  String phone;
+  private  String companyName;
+  private  String postCode;
+  private  String city;
+  private  String address;
+  private  String country;
 
   public static String[] projection() {
     return new String[]{
@@ -32,7 +35,8 @@ public class DisplayUser implements Model {
         User.POST_CODE,
         User.CITY,
         User.ADDRESS,
-        User.COMPANY_NAME
+        User.COMPANY_NAME,
+        User.COUNTRY
     };
   }
 

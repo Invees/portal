@@ -1,11 +1,14 @@
 package de.invees.portal.common.model.price;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class Price {
 
-  private final double amount;
-  private final double taxes;
+  private double raw;
+  private double amount;
+  private double taxes;
 
 }
