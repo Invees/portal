@@ -3,7 +3,7 @@ package de.invees.portal.common.datasource;
 import com.mongodb.*;
 import com.mongodb.client.MongoDatabase;
 import de.invees.portal.common.configuration.DataSourceConfiguration;
-import de.invees.portal.common.datasource.mongodb.*;
+import de.invees.portal.common.datasource.mongodb.UserDataSource;
 import de.invees.portal.common.utils.service.Service;
 import lombok.NonNull;
 import org.bson.codecs.BinaryCodec;

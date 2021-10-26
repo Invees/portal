@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class DisplayUser implements Model {
+public class UserDetails implements Model {
 
   @SerializedName("_id")
   private UUID id;

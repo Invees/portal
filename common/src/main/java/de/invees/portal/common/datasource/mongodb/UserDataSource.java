@@ -6,8 +6,8 @@ import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.exception.MissingUserException;
 import de.invees.portal.common.exception.UserCreationException;
 import de.invees.portal.common.model.Model;
-import de.invees.portal.common.model.user.DisplayUser;
 import de.invees.portal.common.model.user.User;
+import de.invees.portal.common.model.user.UserDetails;
 import de.invees.portal.common.model.user.permission.Permission;
 import lombok.Getter;
 import org.bson.Document;
@@ -36,7 +36,7 @@ public class UserDataSource implements DataSource<User> {
     return null;
   }
 
-  public void createDisplayUser(DisplayUser user) {
+  public void createDisplayUser(UserDetails user) {
     if (byEmail(user.getEmail(), User.class) != null) {
       throw new UserCreationException("EMAIL_TAKEN");
     }

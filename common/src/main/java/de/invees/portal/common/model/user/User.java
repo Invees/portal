@@ -25,6 +25,7 @@ public class User implements Model {
   public static String CITY = "city";
   public static String COUNTRY = "country";
   public static String ADDRESS = "address";
+  public static String VERIFIED = "verified";
 
   @SerializedName("_id")
   private UUID id;
@@ -38,6 +39,7 @@ public class User implements Model {
   private String city;
   private String address;
   private String country;
+  private boolean verified;
   private List<Permission> permissionList;
 
   public static String[] projection() {
@@ -53,7 +55,8 @@ public class User implements Model {
         CITY,
         ADDRESS,
         COMPANY_NAME,
-        COUNTRY
+        COUNTRY,
+        VERIFIED
     };
   }
 

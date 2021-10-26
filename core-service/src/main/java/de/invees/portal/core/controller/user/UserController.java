@@ -15,13 +15,12 @@ import de.invees.portal.core.utils.TokenUtils;
 import de.invees.portal.common.datasource.ConnectionService;
 import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
-import de.invees.portal.common.model.user.DisplayUser;
+import de.invees.portal.common.model.user.UserDetails;
 import spark.Request;
 import spark.Response;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 import static spark.Spark.get;
@@ -57,7 +56,7 @@ public class UserController {
       throw new UserCreationException("PASSWORD_REQUIRED");
     }
 
-    DisplayUser user = GsonUtils.GSON.fromJson(body.get("user"), DisplayUser.class);
+    UserDetails user = GsonUtils.GSON.fromJson(body.get("user"), UserDetails.class);
     if (InputUtils.isEmpty(user.getName())) {
       throw new UserCreationException("MISSING_USER_NAME");
     }
