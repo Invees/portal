@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class OneOffPrice {
 
-  private  double amount;
-  private  int contractTerm;
+  private double amount;
+  private int contractTerm;
 
 }

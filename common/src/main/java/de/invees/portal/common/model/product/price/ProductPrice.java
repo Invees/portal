@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductPrice {
 
-  private  double amount;
-  private  List<OneOffPrice> oneOff;
+  private double amount;
+  private List<OneOffPrice> oneOffList;
 
 }

@@ -8,7 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class ProductFieldValue {
 
-  private  Display displayValue;
-  private  Object value;
+  private Display displayValue;
+  private Object value;
 
 }

@@ -2,11 +2,8 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import de.invees.portal.common.model.invoice.Invoice;
-import de.invees.portal.common.model.order.Order;
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.product.Product;
-import de.invees.portal.common.model.section.Section;
+import de.invees.portal.common.model.order.Order;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;

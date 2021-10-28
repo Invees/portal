@@ -3,16 +3,11 @@ package de.invees.portal.common.datasource.mongodb;
 import com.mongodb.client.MongoCollection;
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.model.Model;
-import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.invoice.InvoiceFile;
-import de.invees.portal.common.utils.gson.GsonUtils;
 import lombok.Getter;
-import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.Binary;
-
-import java.util.UUID;
 
 public class InvoiceFileDataSource implements DataSource<InvoiceFile> {
 

@@ -2,6 +2,6 @@ package de.invees.portal.common.model.order;
 
 public enum OrderStatus {
 
-  PAYMENT_REQUIRED, PROCESSING, PAYMENT_DONE, CANCELED
+  PAYMENT_REQUIRED, PROCESSING, COMPLETED, CANCELED
 
 }

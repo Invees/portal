@@ -2,14 +2,13 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
+import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.exception.MissingUserException;
 import de.invees.portal.common.exception.UserCreationException;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.user.User;
+import de.invees.portal.common.model.user.UserDetails;
 import de.invees.portal.common.model.user.permission.Permission;
-import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.user.DisplayUser;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -37,7 +36,7 @@ public class UserDataSource implements DataSource<User> {
     return null;
   }
 
-  public void createDisplayUser(DisplayUser user) {
+  public void createDisplayUser(UserDetails user) {
     if (byEmail(user.getEmail(), User.class) != null) {
       throw new UserCreationException("EMAIL_TAKEN");
     }
@@ -71,9 +70,9 @@ public class UserDataSource implements DataSource<User> {
     Permission permission = user.getPermission(name);
     if (permission == null) {
       permission = new Permission(name, List.of(context));
-      user.getPermissions().add(permission);
+      user.getPermissionList().add(permission);
     } else {
-      permission.getContext().add(context);
+      permission.getContextList().add(context);
     }
     this.collection.replaceOne(Filters.eq(User.ID, user.getId()), this.map(user));
   }
@@ -88,9 +87,9 @@ public class UserDataSource implements DataSource<User> {
       return;
     }
     if (context == null) {
-      user.getPermissions().remove(permission);
+      user.getPermissionList().remove(permission);
     } else {
-      permission.getContext().remove(context);
+      permission.getContextList().remove(context);
     }
     this.collection.replaceOne(Filters.eq(User.ID, user.getId()), this.map(user));
   }

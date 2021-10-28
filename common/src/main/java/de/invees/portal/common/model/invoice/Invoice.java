@@ -15,26 +15,29 @@ public class Invoice implements Model {
 
   public static String ID = "_id";
   public static String USER_ID = "userId";
+  public static String SERVICE_ID_LIST = "serviceIdList";
   public static String PRICE = "price";
   public static String DATE = "date";
-  public static String POSITIONS = "positions";
+  public static String POSITION_LIST = "positionList";
   public static String STATUS = "status";
 
   @SerializedName("_id")
   private long id;
   private UUID userId;
+  private List<UUID> serviceIdList;
   private Price price;
   private long date;
-  private List<InvoicePosition> positions;
+  private List<InvoicePosition> positionList;
   private InvoiceStatus status;
 
   public static String[] projection() {
     return new String[]{
         ID,
         USER_ID,
+        SERVICE_ID_LIST,
         PRICE,
         DATE,
-        POSITIONS,
+        POSITION_LIST,
         STATUS
     };
   }

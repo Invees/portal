@@ -1,18 +1,18 @@
 package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
-import de.invees.portal.common.model.Display;
-import de.invees.portal.common.model.invoice.InvoiceStatus;
-import de.invees.portal.common.model.price.Price;
-import de.invees.portal.common.model.product.Product;
-import de.invees.portal.common.datasource.ConnectionService;
+import de.invees.portal.common.datasource.MongoService;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
+import de.invees.portal.common.datasource.mongodb.UserDataSource;
 import de.invees.portal.common.exception.CalculationException;
-import de.invees.portal.common.model.order.request.OrderRequest;
+import de.invees.portal.common.model.Display;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.invoice.InvoicePosition;
+import de.invees.portal.common.model.invoice.InvoiceStatus;
+import de.invees.portal.common.model.order.request.OrderRequest;
+import de.invees.portal.common.model.price.Price;
+import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.model.product.price.OneOffPrice;
 import de.invees.portal.common.model.section.Section;
 import de.invees.portal.common.model.section.configuration.SectionConfigurationEntry;
@@ -44,6 +44,7 @@ public class InvoiceUtils {
     return new Invoice(
         id,
         userId,
+        null,
         new Price(
             round(price) - taxes(round(price), 19),
             round(price),
@@ -66,7 +67,7 @@ public class InvoiceUtils {
 
     for (String key : orderRequest.getConfiguration().keySet()) {
       boolean found = false;
-      for (SectionConfigurationEntry entry : section.getConfiguration()) {
+      for (SectionConfigurationEntry entry : section.getConfigurationList()) {
         if (entry.getKey().equals(key)) {
           found = true;
           break;
@@ -79,7 +80,7 @@ public class InvoiceUtils {
     for (Map.Entry<String, Object> entry : orderRequest.getConfiguration().entrySet()) {
       boolean found = false;
       SectionConfigurationEntry configurationEntry = getConfigurationEntry(section, entry.getKey());
-      for (SectionConfigurationEntryOption option : configurationEntry.getOptions()) {
+      for (SectionConfigurationEntryOption option : configurationEntry.getOptionList()) {
         if (option.getValue().equals(entry.getValue())) {
           found = true;
           break;
@@ -138,7 +139,7 @@ public class InvoiceUtils {
   }
 
   private static OneOffPrice getOneOffPrice(Product product, int contractTerm) {
-    for (OneOffPrice oneOffPrice : product.getPrice().getOneOff()) {
+    for (OneOffPrice oneOffPrice : product.getPrice().getOneOffList()) {
       if (oneOffPrice.getContractTerm() == contractTerm) {
         return oneOffPrice;
       }
@@ -147,7 +148,7 @@ public class InvoiceUtils {
   }
 
   private static SectionConfigurationEntry getConfigurationEntry(Section section, String key) {
-    for (SectionConfigurationEntry entry : section.getConfiguration()) {
+    for (SectionConfigurationEntry entry : section.getConfigurationList()) {
       if (entry.getKey().equals(key)) {
         return entry;
       }
@@ -156,7 +157,7 @@ public class InvoiceUtils {
   }
 
   private static SectionConfigurationEntryOption getEntryOption(Section section, String key, Object value) {
-    for (SectionConfigurationEntryOption option : getConfigurationEntry(section, key).getOptions()) {
+    for (SectionConfigurationEntryOption option : getConfigurationEntry(section, key).getOptionList()) {
       if (option.getValue().equals(value)) {
         return option;
       }
@@ -165,13 +166,13 @@ public class InvoiceUtils {
   }
 
   private static Section section(String id) {
-    return ServiceRegistry.access(ConnectionService.class)
+    return ServiceRegistry.access(MongoService.class)
         .access(SectionDataSource.class)
         .byId(id, Section.class);
   }
 
   private static Product product(String id) {
-    return ServiceRegistry.access(ConnectionService.class)
+    return ServiceRegistry.access(MongoService.class)
         .access(ProductDataSource.class)
         .byId(id, Product.class);
   }
@@ -186,7 +187,7 @@ public class InvoiceUtils {
 
   public static byte[] createInvoiceFile(Invoice invoice) {
     try {
-      User user = ServiceRegistry.access(ConnectionService.class)
+      User user = ServiceRegistry.access(MongoService.class)
           .access(UserDataSource.class)
           .byId(invoice.getUserId().toString(), User.class);
 
@@ -195,7 +196,7 @@ public class InvoiceUtils {
       String positionTemplate = TemplateUtils.loadTemplate("invoice/de/position.html");
 
       StringBuilder exportablePositions = new StringBuilder();
-      for (String str : generateExportablePositions(invoice.getPositions(), positionTemplate, new AtomicInteger(1))) {
+      for (String str : generateExportablePositions(invoice.getPositionList(), positionTemplate, new AtomicInteger(1))) {
         exportablePositions.append(str);
       }
 
@@ -248,7 +249,7 @@ public class InvoiceUtils {
         );
         positionIndex.set(positionIndex.get() + 1);
       }
-      exportablePositions.addAll(generateExportablePositions(position.getPositions(), positionTemplate, positionIndex));
+      exportablePositions.addAll(generateExportablePositions(position.getPositionList(), positionTemplate, positionIndex));
     }
     return exportablePositions;
   }

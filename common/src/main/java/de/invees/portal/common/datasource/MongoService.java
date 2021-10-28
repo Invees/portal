@@ -13,13 +13,13 @@ import org.bson.codecs.configuration.CodecRegistry;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConnectionService implements Service {
+public class MongoService implements Service {
 
   private final Map<Class<? extends DataSource>, DataSource> dataSourceMap = new HashMap<>();
   private final MongoClient client;
   private final MongoDatabase database;
 
-  public ConnectionService(DataSourceConfiguration dataSource) {
+  public MongoService(DataSourceConfiguration dataSource) {
     CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
         CodecRegistries.fromCodecs(new BinaryCodec()),
         MongoClient.getDefaultCodecRegistry()

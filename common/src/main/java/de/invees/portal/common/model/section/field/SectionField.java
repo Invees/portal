@@ -9,8 +9,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class SectionField implements Model {
 
-  private  String key;
-  private  Display displayName;
-  private  SectionFieldType type;
+  private String key;
+  private Display displayName;
+  private SectionFieldType type;
 
 }

@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class Display {
 
-  private  String de;
-  private  String en;
+  private String de;
+  private String en;
 
 }

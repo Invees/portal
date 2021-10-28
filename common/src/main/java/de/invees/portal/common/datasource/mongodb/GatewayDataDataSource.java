@@ -1,10 +1,8 @@
 package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
-import com.paypal.orders.Order;
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.model.gateway.GatewayData;
-import de.invees.portal.common.model.invoice.Invoice;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;

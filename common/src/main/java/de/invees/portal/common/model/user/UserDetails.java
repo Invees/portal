@@ -9,20 +9,20 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class DisplayUser implements Model {
+public class UserDetails implements Model {
 
   @SerializedName("_id")
-  private  UUID id;
-  private  String name;
-  private  String firstName;
-  private  String lastName;
-  private  String email;
-  private  String phone;
-  private  String companyName;
-  private  String postCode;
-  private  String city;
-  private  String address;
-  private  String country;
+  private UUID id;
+  private String name;
+  private String firstName;
+  private String lastName;
+  private String email;
+  private String phone;
+  private String companyName;
+  private String postCode;
+  private String city;
+  private String address;
+  private String country;
 
   public static String[] projection() {
     return new String[]{

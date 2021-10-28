@@ -8,7 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class SectionTag {
 
-  private  Display displayTitle;
-  private  Display displayValue;
+  private Display displayTitle;
+  private Display displayValue;
 
 }

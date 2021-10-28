@@ -5,9 +5,9 @@ import lombok.Data;
 @Data
 public class PayPalConfiguration {
 
-  private String clientId;
-  private String clientSecret;
-  private String baseUrl;
-  private String webUrl;
+  private final String clientId;
+  private final String clientSecret;
+  private final String baseUrl;
+  private final String webUrl;
 
 }
