@@ -21,5 +21,11 @@
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>16</maven.compiler.target>
     </properties>
-
+    <dependencies>
+        <dependency>
+            <groupId>de.invees</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 </project>

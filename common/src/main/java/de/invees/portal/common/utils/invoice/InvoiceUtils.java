@@ -1,7 +1,7 @@
 package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
-import de.invees.portal.common.datasource.ConnectionService;
+import de.invees.portal.common.datasource.MongoService;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
@@ -166,13 +166,13 @@ public class InvoiceUtils {
   }
 
   private static Section section(String id) {
-    return ServiceRegistry.access(ConnectionService.class)
+    return ServiceRegistry.access(MongoService.class)
         .access(SectionDataSource.class)
         .byId(id, Section.class);
   }
 
   private static Product product(String id) {
-    return ServiceRegistry.access(ConnectionService.class)
+    return ServiceRegistry.access(MongoService.class)
         .access(ProductDataSource.class)
         .byId(id, Product.class);
   }
@@ -187,7 +187,7 @@ public class InvoiceUtils {
 
   public static byte[] createInvoiceFile(Invoice invoice) {
     try {
-      User user = ServiceRegistry.access(ConnectionService.class)
+      User user = ServiceRegistry.access(MongoService.class)
           .access(UserDataSource.class)
           .byId(invoice.getUserId().toString(), User.class);
 

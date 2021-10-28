@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import de.invees.portal.common.datasource.ConnectionService;
+import de.invees.portal.common.datasource.MongoService;
 import de.invees.portal.common.datasource.mongodb.GatewayDataDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceFileDataSource;
@@ -37,7 +37,7 @@ import static spark.Spark.post;
 
 public class InvoiceController extends Controller {
 
-  private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
+  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
 
   public InvoiceController() {
     get("/invoice/", this::list);

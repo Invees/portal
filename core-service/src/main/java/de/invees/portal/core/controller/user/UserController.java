@@ -12,7 +12,7 @@ import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.common.utils.security.SecurityUtils;
 import de.invees.portal.core.utils.TokenUtils;
-import de.invees.portal.common.datasource.ConnectionService;
+import de.invees.portal.common.datasource.MongoService;
 import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
 import de.invees.portal.common.model.user.UserDetails;
@@ -28,7 +28,7 @@ import static spark.Spark.post;
 
 public class UserController {
 
-  private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
+  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
 
   public UserController() {
     get("/user/", this::localUser);

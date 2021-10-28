@@ -1,4 +1,4 @@
-package de.invees.portal.core.configuration;
+package de.invees.portal.processing.master.configuration;
 
 import de.invees.portal.common.configuration.DataSourceConfiguration;
 import de.invees.portal.common.configuration.NatsConfiguration;
@@ -9,7 +9,6 @@ import lombok.Data;
 public class Configuration {
 
   private final DataSourceConfiguration dataSource;
-  private final PayPalConfiguration paypal;
   private final NatsConfiguration nats;
 
 }

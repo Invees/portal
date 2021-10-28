@@ -16,7 +16,7 @@ import de.invees.portal.common.model.order.request.OrderRequest;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
 import de.invees.portal.core.utils.TokenUtils;
-import de.invees.portal.common.datasource.ConnectionService;
+import de.invees.portal.common.datasource.MongoService;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
 import spark.Request;
 import spark.Response;
@@ -29,7 +29,7 @@ import static spark.Spark.post;
 
 public class OrderController {
 
-  private final LazyLoad<ConnectionService> connection = new LazyLoad<>(ConnectionService.class);
+  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
 
   public OrderController() {
     post("/order/preview/", this::preview);
