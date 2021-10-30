@@ -5,6 +5,7 @@ import de.invees.portal.common.model.Display;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.product.field.ProductFieldValue;
 import de.invees.portal.common.model.product.price.ProductPrice;
+import de.invees.portal.common.model.service.UserServiceType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -18,6 +19,7 @@ public class Product implements Model {
   public static String DISPLAY_NAME = "displayName";
   public static String DESCRIPTION = "displayName";
   public static String SECTION_ID = "sectionId";
+  public static String TYPE = "type";
   public static String FIELD_LIST = "fieldList";
   public static String PRICE = "price";
   public static String ACTIVE = "active";
@@ -28,6 +30,7 @@ public class Product implements Model {
   private Display displayName;
   private String description;
   private Map<String, ProductFieldValue> fieldList;
+  private UserServiceType type;
   private ProductPrice price;
   private boolean active;
 

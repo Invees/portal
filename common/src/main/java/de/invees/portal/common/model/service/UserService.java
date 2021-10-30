@@ -16,6 +16,7 @@ public class UserService implements Model {
   private UUID id;
   private UUID userId;
   private UUID initialOrderId;
+  private UUID workerId;
   private OrderRequest orderRequest;
 
 }
