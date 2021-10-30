@@ -1,4 +1,4 @@
-package de.invees.portal.common.nats.message;
+package de.invees.portal.common.nats.message.processing;
 
 import de.invees.portal.common.model.worker.ProcessingWorker;
 import lombok.Data;

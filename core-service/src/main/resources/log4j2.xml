@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
 <Appenders>
-    <RollingFile name="portal" fileName="logs/portal.log"
+    <RollingFile name="application" fileName="logs/portal.log"
                  filePattern="logs/portal-%d{yyyy-MM-dd}-%i.log" >
         <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] %msg%n" />
         <Policies>
@@ -27,8 +27,8 @@
     </RollingFile>
 </Appenders>
 <Loggers>
-    <Logger name="de.invees.portal.core.Application" level="DEBUG" additivity="true">
-        <AppenderRef ref="portal" />
+    <Logger name="application" level="DEBUG" additivity="true">
+        <AppenderRef ref="application" />
     </Logger>
     <Logger name="org.mongodb.driver.cluster" level="DEBUG" additivity="true">
         <AppenderRef ref="mongodbLog" />

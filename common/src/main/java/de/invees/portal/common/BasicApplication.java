@@ -15,7 +15,7 @@ import java.io.FileReader;
 public class BasicApplication {
 
   public static final String VERSION = "1.0.0";
-  public static final Logger LOGGER = LoggerFactory.getLogger(BasicApplication.class);
+  public static final Logger LOGGER = LoggerFactory.getLogger("application");
 
   public <T> T loadConfiguration(Class<T> type) throws FileNotFoundException {
     try {
@@ -39,5 +39,6 @@ public class BasicApplication {
         NatsService.class,
         new NatsService(configuration)
     );
+
   }
 }
