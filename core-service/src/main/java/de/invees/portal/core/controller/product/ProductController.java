@@ -1,10 +1,10 @@
 package de.invees.portal.core.controller.product;
 
-import de.invees.portal.common.datasource.MongoService;
+import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.service.LazyLoad;
+import de.invees.portal.common.utils.provider.LazyLoad;
 import spark.Request;
 import spark.Response;
 
@@ -12,7 +12,7 @@ import static spark.Spark.get;
 
 public class ProductController {
 
-  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
+  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public ProductController() {
     get("/product/", this::list);

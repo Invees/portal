@@ -2,10 +2,10 @@ package de.invees.portal.common;
 
 import de.invees.portal.common.configuration.DataSourceConfiguration;
 import de.invees.portal.common.configuration.NatsConfiguration;
-import de.invees.portal.common.datasource.MongoService;
-import de.invees.portal.common.nats.NatsService;
+import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.service.ServiceRegistry;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,19 +26,18 @@ public class BasicApplication {
   }
 
   public void loadDataSource(DataSourceConfiguration configuration) {
-    LOGGER.info("Loading DataSourceConnectionService..");
-    ServiceRegistry.register(
-        MongoService.class,
-        new MongoService(configuration)
+    LOGGER.info("Loading DataSource Provider..");
+    ProviderRegistry.register(
+        DataSourceProvider.class,
+        new DataSourceProvider(configuration)
     );
   }
 
-  public void loadNatsService(NatsConfiguration configuration) {
-    LOGGER.info("Loading NATS Service..");
-    ServiceRegistry.register(
-        NatsService.class,
-        new NatsService(configuration)
+  public void loadNatsProvider(NatsConfiguration configuration) {
+    LOGGER.info("Loading NATS Provider..");
+    ProviderRegistry.register(
+        NatsProvider.class,
+        new NatsProvider(configuration)
     );
-
   }
 }

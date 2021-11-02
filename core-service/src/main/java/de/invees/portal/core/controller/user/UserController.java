@@ -2,20 +2,20 @@ package de.invees.portal.core.controller.user;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
+import de.invees.portal.common.datasource.mongodb.UserDataSource;
+import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.exception.UserCreationException;
 import de.invees.portal.common.model.user.User;
 import de.invees.portal.common.model.user.UserAuthentication;
 import de.invees.portal.common.model.user.UserAuthenticationType;
-import de.invees.portal.common.utils.service.LazyLoad;
-import de.invees.portal.common.exception.UnauthorizedException;
-import de.invees.portal.common.utils.gson.GsonUtils;
+import de.invees.portal.common.model.user.UserDetails;
 import de.invees.portal.common.utils.InputUtils;
+import de.invees.portal.common.utils.gson.GsonUtils;
+import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.security.SecurityUtils;
 import de.invees.portal.core.utils.TokenUtils;
-import de.invees.portal.common.datasource.MongoService;
-import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
-import de.invees.portal.common.model.user.UserDetails;
 import spark.Request;
 import spark.Response;
 
@@ -28,7 +28,7 @@ import static spark.Spark.post;
 
 public class UserController {
 
-  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
+  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public UserController() {
     get("/user/", this::localUser);
@@ -44,8 +44,8 @@ public class UserController {
 
   public Object register(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    if (body.get("user").getAsJsonObject().get("_id") != null &&
-        !body.get("user").getAsJsonObject().get("_id").isJsonNull()) {
+    if (body.get("user").getAsJsonObject().get("_id") != null
+        && !body.get("user").getAsJsonObject().get("_id").isJsonNull()) {
       throw new UserCreationException("ID_MUST_BE_NULL");
     }
 

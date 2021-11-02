@@ -10,12 +10,12 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class UserService implements Model {
+public class Service implements Model {
 
   @SerializedName("_id")
   private UUID id;
   private UUID userId;
-  private UUID initialOrderId;
+  private UUID parentOrderId; // the order which belongs to this service, can be changed on upgrades etc.
   private UUID workerId;
   private OrderRequest orderRequest;
 

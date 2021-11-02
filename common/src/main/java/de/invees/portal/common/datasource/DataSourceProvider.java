@@ -4,7 +4,7 @@ import com.mongodb.*;
 import com.mongodb.client.MongoDatabase;
 import de.invees.portal.common.configuration.DataSourceConfiguration;
 import de.invees.portal.common.datasource.mongodb.*;
-import de.invees.portal.common.utils.service.Service;
+import de.invees.portal.common.utils.provider.Provider;
 import lombok.NonNull;
 import org.bson.codecs.BinaryCodec;
 import org.bson.codecs.configuration.CodecRegistries;
@@ -13,13 +13,13 @@ import org.bson.codecs.configuration.CodecRegistry;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MongoService implements Service {
+public class DataSourceProvider implements Provider {
 
   private final Map<Class<? extends DataSource>, DataSource> dataSourceMap = new HashMap<>();
   private final MongoClient client;
   private final MongoDatabase database;
 
-  public MongoService(DataSourceConfiguration dataSource) {
+  public DataSourceProvider(DataSourceConfiguration dataSource) {
     CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
         CodecRegistries.fromCodecs(new BinaryCodec()),
         MongoClient.getDefaultCodecRegistry()

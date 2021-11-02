@@ -18,6 +18,7 @@ public class Order implements Model {
   public static String ORDER_TIME = "orderTime";
   public static String REQUEST = "request";
   public static String STATUS = "status";
+  public static String REPLACEMENT_ID = "replacementId";
 
   @SerializedName("_id")
   private UUID id;
@@ -26,6 +27,7 @@ public class Order implements Model {
   private long orderTime;
   private OrderRequest request;
   private OrderStatus status;
+  private UUID replacementId; // Order may be replaced by another order e.g more IPv4 Address, more ram or any upgrades
 
   public static String[] projection() {
     return new String[]{
@@ -34,7 +36,8 @@ public class Order implements Model {
         INVOICE_ID,
         ORDER_TIME,
         REQUEST,
-        STATUS
+        STATUS,
+        REPLACEMENT_ID
     };
   }
 }

@@ -6,19 +6,19 @@ import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
 import de.invees.portal.common.configuration.PayPalConfiguration;
 import de.invees.portal.common.model.invoice.Invoice;
-import de.invees.portal.common.utils.service.Service;
+import de.invees.portal.common.utils.provider.Provider;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PayPalGatewayService implements Service {
+public class PayPalGatewayProvider implements Provider {
 
   private final PayPalHttpClient client;
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0#");
 
-  public PayPalGatewayService(PayPalConfiguration configuration) {
+  public PayPalGatewayProvider(PayPalConfiguration configuration) {
     this.client = new PayPalHttpClient(new PayPalEnvironment(
         configuration.getClientId(),
         configuration.getClientSecret(),
@@ -35,15 +35,12 @@ public class PayPalGatewayService implements Service {
   }
 
   public HttpResponse<Order> createOrder(Invoice invoice) throws IOException {
-    OrdersCreateRequest request = new OrdersCreateRequest();
-
     OrderRequest orderRequest = new OrderRequest();
     orderRequest.checkoutPaymentIntent("CAPTURE");
 
     ApplicationContext applicationContext = new ApplicationContext().brandName("INVEES UG");
     orderRequest.applicationContext(applicationContext);
 
-    List<PurchaseUnitRequest> purchaseUnitRequests = new ArrayList<>();
     PurchaseUnitRequest purchaseUnitRequest = new PurchaseUnitRequest();
     purchaseUnitRequest.referenceId(invoice.getId() + "");
     purchaseUnitRequest.invoiceId(invoice.getId() + "");
@@ -58,9 +55,11 @@ public class PayPalGatewayService implements Service {
             )
     );
 
+    List<PurchaseUnitRequest> purchaseUnitRequests = new ArrayList<>();
     purchaseUnitRequests.add(purchaseUnitRequest);
     orderRequest.purchaseUnits(purchaseUnitRequests);
 
+    OrdersCreateRequest request = new OrdersCreateRequest();
     request.requestBody(orderRequest);
     return this.client.execute(request);
   }
@@ -68,6 +67,5 @@ public class PayPalGatewayService implements Service {
   private static final String format(double num) {
     return DECIMAL_FORMAT.format(num).replace(",", ".");
   }
-
 
 }

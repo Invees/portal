@@ -8,6 +8,8 @@ import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.util.List;
+
 public class OrderDataSource implements DataSource<Order> {
 
   @Getter
@@ -31,5 +33,9 @@ public class OrderDataSource implements DataSource<Order> {
         Filters.eq(Order.ID, order.getId().toString()),
         this.map(order)
     );
+  }
+
+  public List<Order> byInvoiceId(long id) {
+    return this.list(Order.class, Filters.eq(Order.INVOICE_ID, id)).getItems();
   }
 }

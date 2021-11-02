@@ -125,7 +125,7 @@ public interface DataSource<T> {
     if (document == null) {
       document = new Document()
           .append("_id", this.getCollection().getNamespace().getCollectionName())
-          .append("seq", 1);
+          .append("seq", 1L);
       this.getSequenceCollection().insertOne(document);
     }
   }

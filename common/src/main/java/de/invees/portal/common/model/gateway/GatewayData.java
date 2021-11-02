@@ -11,7 +11,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class GatewayData implements Model {
 
-
   @SerializedName("_id")
   private UUID id;
   private GatewayDataType type;

@@ -1,20 +1,21 @@
 package de.invees.portal.processing.master;
 
 import de.invees.portal.common.BasicApplication;
-import de.invees.portal.common.nats.NatsService;
+import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.MasterStartedMessage;
-import de.invees.portal.common.utils.service.ServiceRegistry;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.master.configuration.Configuration;
-import de.invees.portal.processing.master.nats.ConnectionMessageHandler;
-import de.invees.portal.processing.master.worker.WorkerRegistryService;
+import de.invees.portal.processing.master.nats.PaymentMessageHandler;
+import de.invees.portal.processing.master.nats.ProcessingMessageHandler;
+import de.invees.portal.processing.master.worker.WorkerRegistryProvider;
 import lombok.Getter;
 
 public class Application extends BasicApplication {
 
   @Getter
   private Configuration configuration;
-  private NatsService natsService;
+  private NatsProvider natsProvider;
 
   public static void main(String[] args) {
     new Application();
@@ -28,8 +29,8 @@ public class Application extends BasicApplication {
     loadWorkerRegistry();
     loadDataSource(this.configuration.getDataSource());
 
-    loadNatsService(this.configuration.getNats());
-    this.natsService = ServiceRegistry.access(NatsService.class);
+    loadNatsProvider(this.configuration.getNats());
+    this.natsProvider = ProviderRegistry.access(NatsProvider.class);
     loadMessageHandler();
     executeHandshake();
 
@@ -37,7 +38,7 @@ public class Application extends BasicApplication {
   }
 
   public void loadWorkerRegistry() {
-    ServiceRegistry.register(WorkerRegistryService.class, new WorkerRegistryService());
+    ProviderRegistry.register(WorkerRegistryProvider.class, new WorkerRegistryProvider());
   }
 
   public boolean loadConfiguration() {
@@ -52,14 +53,19 @@ public class Application extends BasicApplication {
   }
 
   public void loadMessageHandler() {
-    ServiceRegistry.access(NatsService.class)
-        .subscribe(Subject.PROCESSING, new ConnectionMessageHandler(
-            ServiceRegistry.access(WorkerRegistryService.class),
-            ServiceRegistry.access(NatsService.class)
+    ProviderRegistry.access(NatsProvider.class)
+        .subscribe(Subject.PROCESSING, new ProcessingMessageHandler(
+            ProviderRegistry.access(WorkerRegistryProvider.class),
+            ProviderRegistry.access(NatsProvider.class)
+        ))
+        .subscribe(Subject.PAYMENT, new PaymentMessageHandler(
+            ProviderRegistry.access(WorkerRegistryProvider.class),
+            this,
+            ProviderRegistry.access(NatsProvider.class)
         ));
   }
 
   public void executeHandshake() {
-    natsService.send(Subject.PROCESSING, new MasterStartedMessage());
+    natsProvider.send(Subject.PROCESSING, new MasterStartedMessage());
   }
 }
