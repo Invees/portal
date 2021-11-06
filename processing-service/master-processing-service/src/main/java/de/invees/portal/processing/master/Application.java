@@ -33,8 +33,10 @@ public class Application extends BasicApplication {
     this.natsProvider = ProviderRegistry.access(NatsProvider.class);
     loadMessageHandler();
     executeHandshake();
-
-    while (true) ;
+    LOGGER.info("-------- SERVICE STARTED --------");
+    new Thread(() -> {
+      while (true) ;
+    }).start();
   }
 
   public void loadWorkerRegistry() {

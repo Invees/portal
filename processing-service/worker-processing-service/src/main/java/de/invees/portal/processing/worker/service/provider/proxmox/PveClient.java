@@ -1,10 +1,15 @@
 package de.invees.portal.processing.worker.service.provider.proxmox;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.processing.worker.Application;
 import de.invees.portal.processing.worker.configuration.ProxmoxConfiguration;
+import de.invees.portal.processing.worker.service.provider.proxmox.model.Storage;
+import de.invees.portal.processing.worker.service.provider.proxmox.model.VirtualMachine;
+import de.invees.portal.processing.worker.service.provider.proxmox.model.VirtualMachineCreate;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -15,6 +20,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static java.net.http.HttpClient.Version;
 
@@ -24,6 +32,7 @@ public class PveClient {
     public static final String LOGIN = "{%url%}/api2/json/access/ticket";
     public static final String QEMU = "{%url%}/api2/json/nodes/%0$s/qemu";
     public static final String NEXT_ID = "{%url%}/api2/json/cluster/nextid";
+    public static final String STORAGE = "{%url%}/api2/json/nodes/%0$s/storage";
   }
 
   private final ProxmoxConfiguration configuration;
@@ -68,8 +77,36 @@ public class PveClient {
     }).start();
   }
 
-  public void createVirtualMachine(VirtualMachine machine) {
-    post(URI.create(parse(URL.QEMU, "avalon")), GsonUtils.toJson(machine));
+  public List<Storage> getStorages() {
+    JsonArray data = get(URI.create(parse(URL.QEMU, configuration.getNode()))).getAsJsonArray("data");
+    List<Storage> storages = new ArrayList<>();
+    for (JsonElement element : data) {
+      storages.add(GsonUtils.GSON.fromJson(element, Storage.class));
+    }
+    return storages;
+  }
+
+  public VirtualMachine getMachine(UUID serviceId) {
+    List<VirtualMachine> machines = new ArrayList<>();
+    for (VirtualMachine machine : machines) {
+      if (machine.getName().equalsIgnoreCase(serviceId.toString())) {
+        return machine;
+      }
+    }
+    return null;
+  }
+
+  public List<VirtualMachine> getVirtualMachines() {
+    JsonArray data = get(URI.create(parse(URL.QEMU, configuration.getNode()))).getAsJsonArray("data");
+    List<VirtualMachine> machines = new ArrayList<>();
+    for (JsonElement element : data) {
+      machines.add(GsonUtils.GSON.fromJson(element, VirtualMachine.class));
+    }
+    return machines;
+  }
+
+  public void createVirtualMachine(VirtualMachineCreate machine) {
+    post(URI.create(parse(URL.QEMU, configuration.getNode())), GsonUtils.toJson(machine));
   }
 
   public int getNextId() {

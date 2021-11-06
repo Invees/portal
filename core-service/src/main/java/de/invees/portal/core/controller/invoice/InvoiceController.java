@@ -81,7 +81,6 @@ public class InvoiceController extends Controller {
         order.setStatus(OrderStatus.PROCESSING);
         orderDataSource().update(order);
       }
-      // NOW WE SEND A NATS MESSAGE TO CREATE THE SERVICES FROM ORDERS
       ProviderRegistry.access(NatsProvider.class).send(Subject.PAYMENT, new PaymentMessage(invoice.getId()));
     }
     return GsonUtils.toJson(orderResponse);

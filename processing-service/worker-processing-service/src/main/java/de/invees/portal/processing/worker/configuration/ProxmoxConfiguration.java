@@ -10,5 +10,6 @@ public class ProxmoxConfiguration {
   private final String password;
   private final String realm;
   private final String node;
+  private final int maxCores;
 
 }

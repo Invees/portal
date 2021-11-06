@@ -10,6 +10,7 @@ import de.invees.portal.common.nats.message.processing.KeepAliveMessage;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.worker.configuration.Configuration;
 import de.invees.portal.processing.worker.nats.ProcessingMessageHandler;
+import de.invees.portal.processing.worker.service.provider.ServiceProvider;
 import de.invees.portal.processing.worker.service.provider.proxmox.ProxmoxServiceProvider;
 import lombok.Getter;
 
@@ -36,28 +37,36 @@ public class Application extends BasicApplication {
     this.natsProvidr = ProviderRegistry.access(NatsProvider.class);
     loadMessageHandler();
     executeHandshake();
-
-    while (true) {
-      try {
-        Thread.sleep(2500);
-        this.natsProvidr.send(Subject.PROCESSING, new KeepAliveMessage(configuration.getId()));
-      } catch (Exception e) {
-        LOGGER.error("", e);
-      }
-    }
   }
 
   public void postInitialize() {
     if (ready) {
       return;
     }
+    ready = true;
     loadDataSource(this.configuration.getDataSource());
     loadServiceProvider();
+    LOGGER.info("-------- SERVICE STARTED --------");
+    new Thread(() -> {
+      while (true) {
+        try {
+          this.natsProvidr.send(Subject.PROCESSING, new KeepAliveMessage(
+              configuration.getId(),
+              ProviderRegistry.access(ServiceProvider.class).getUsage()
+          ));
+          Thread.sleep(2500);
+        } catch (Exception e) {
+          LOGGER.error("", e);
+        }
+      }
+    }).start();
   }
 
   private void loadServiceProvider() {
     if (this.configuration.getServiceType() == ServiceType.VIRTUAL_SERVER) {
-      ProviderRegistry.register(ProxmoxServiceProvider.class, new ProxmoxServiceProvider(configuration.getProxmox()));
+      ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration.getProxmox());
+      ProviderRegistry.register(ServiceProvider.class, provider);
+      ProviderRegistry.register(ProxmoxServiceProvider.class, provider);
     }
   }
 

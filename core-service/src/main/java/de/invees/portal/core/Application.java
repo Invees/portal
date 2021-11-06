@@ -23,6 +23,7 @@ public class Application extends BasicApplication {
     loadPayPal();
     loadNatsProvider(configuration.getNats());
     startWebServer();
+    LOGGER.info("-------- SERVICE STARTED --------");
   }
 
   public boolean loadConfiguration() {

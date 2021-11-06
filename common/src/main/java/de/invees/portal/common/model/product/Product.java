@@ -41,6 +41,7 @@ public class Product implements Model {
         DESCRIPTION,
         SECTION_ID,
         FIELD_LIST,
+        TYPE,
         PRICE,
         ACTIVE
     };

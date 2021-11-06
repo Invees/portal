@@ -8,5 +8,6 @@ import java.util.UUID;
 public class KeepAliveMessage implements Message {
 
   private final UUID id;
+  private final double usage;
 
 }
