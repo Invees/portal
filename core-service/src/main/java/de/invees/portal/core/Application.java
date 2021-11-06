@@ -1,11 +1,10 @@
 package de.invees.portal.core;
 
 import de.invees.portal.common.BasicApplication;
-import de.invees.portal.common.datasource.MongoService;
-import de.invees.portal.common.gateway.paypal.PayPalGatewayService;
-import de.invees.portal.common.utils.service.ServiceRegistry;
+import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.configuration.Configuration;
-import de.invees.portal.core.web.SparkServer;
+import de.invees.portal.core.web.HttpServerProvider;
 
 public class Application extends BasicApplication {
 
@@ -16,13 +15,15 @@ public class Application extends BasicApplication {
   }
 
   private Application() {
-    LOGGER.info("Starting Invees/Portal/Backend v" + VERSION);
+    LOGGER.info("Starting Invees/Portal/Core v" + VERSION);
     if (!loadConfiguration()) {
       return;
     }
     loadDataSource(configuration.getDataSource());
     loadPayPal();
+    loadNatsProvider(configuration.getNats());
     startWebServer();
+    LOGGER.info("-------- SERVICE STARTED --------");
   }
 
   public boolean loadConfiguration() {
@@ -38,14 +39,14 @@ public class Application extends BasicApplication {
 
   public void loadPayPal() {
     LOGGER.info("Loading PayPal Gateway..");
-    ServiceRegistry.register(PayPalGatewayService.class, new PayPalGatewayService(
+    ProviderRegistry.register(PayPalGatewayProvider.class, new PayPalGatewayProvider(
         configuration.getPaypal()
     ));
   }
 
   public void startWebServer() {
-    LOGGER.info("Starting Web Server..");
-    new SparkServer();
+    LOGGER.info("Starting Http Server Provider..");
+    ProviderRegistry.register(HttpServerProvider.class, new HttpServerProvider(configuration));
   }
 
 }

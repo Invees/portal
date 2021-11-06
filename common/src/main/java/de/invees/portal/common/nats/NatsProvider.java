@@ -6,7 +6,7 @@ import de.invees.portal.common.BasicApplication;
 import de.invees.portal.common.configuration.NatsConfiguration;
 import de.invees.portal.common.nats.message.processing.Message;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.service.Service;
+import de.invees.portal.common.utils.provider.Provider;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Nats;
@@ -15,13 +15,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NatsService implements Service {
+public class NatsProvider implements Provider {
 
   private final Connection connection;
   private final Map<String, MessageHandler> handlerMap = new HashMap<>();
   private Dispatcher dispatcher;
 
-  public NatsService(NatsConfiguration configuration) {
+  public NatsProvider(NatsConfiguration configuration) {
     try {
       this.connection = Nats.connect(configuration.getUrl());
       dispatcher = this.connection.createDispatcher((msg) -> {
@@ -43,12 +43,12 @@ public class NatsService implements Service {
     }
   }
 
-  public NatsService send(String subject, Message message) {
+  public NatsProvider send(String subject, Message message) {
     this.connection.publish(subject, map(message).toString().getBytes(StandardCharsets.UTF_8));
     return this;
   }
 
-  public NatsService subscribe(String subject, MessageHandler handler) {
+  public NatsProvider subscribe(String subject, MessageHandler handler) {
     handlerMap.put(subject, handler);
     dispatcher.subscribe(subject);
     return this;

@@ -1,7 +1,7 @@
 package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
-import de.invees.portal.common.datasource.MongoService;
+import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
@@ -18,7 +18,7 @@ import de.invees.portal.common.model.section.Section;
 import de.invees.portal.common.model.section.configuration.SectionConfigurationEntry;
 import de.invees.portal.common.model.section.configuration.SectionConfigurationEntryOption;
 import de.invees.portal.common.model.user.User;
-import de.invees.portal.common.utils.service.ServiceRegistry;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.common.utils.template.TemplateUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -44,7 +44,7 @@ public class InvoiceUtils {
     return new Invoice(
         id,
         userId,
-        null,
+        new ArrayList<>(),
         new Price(
             round(price) - taxes(round(price), 19),
             round(price),
@@ -62,7 +62,6 @@ public class InvoiceUtils {
     if (!product.isActive() || !section.isActive()) {
       throw new CalculationException("PRODUCT_INACTIVE");
     }
-    OneOffPrice oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
     double price = 0;
 
     for (String key : orderRequest.getConfiguration().keySet()) {
@@ -105,6 +104,8 @@ public class InvoiceUtils {
       ));
       price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice();
     }
+
+    OneOffPrice oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
     if (oneOffPrice.getAmount() != 0) {
       subPositions.add(new InvoicePosition(
           new Display(
@@ -126,8 +127,14 @@ public class InvoiceUtils {
     price += oneOffPrice.getAmount();
     price += product.getPrice().getAmount();
     positions.add(new InvoicePosition(
-        product.getDisplayName(),
-        product.getDisplayName(),
+        new Display(
+            section.getDisplayName().getDe() + " " + product.getDisplayName().getDe(),
+            section.getDisplayName().getEn() + " " + product.getDisplayName().getEn()
+        ),
+        new Display(
+            section.getDisplayName().getDe() + " " + product.getDisplayName().getDe(),
+            section.getDisplayName().getEn() + " " + product.getDisplayName().getEn()
+        ),
         "product",
         product.getId(),
         product.getPrice().getAmount(),
@@ -166,13 +173,13 @@ public class InvoiceUtils {
   }
 
   private static Section section(String id) {
-    return ServiceRegistry.access(MongoService.class)
+    return ProviderRegistry.access(DataSourceProvider.class)
         .access(SectionDataSource.class)
         .byId(id, Section.class);
   }
 
   private static Product product(String id) {
-    return ServiceRegistry.access(MongoService.class)
+    return ProviderRegistry.access(DataSourceProvider.class)
         .access(ProductDataSource.class)
         .byId(id, Product.class);
   }
@@ -187,7 +194,7 @@ public class InvoiceUtils {
 
   public static byte[] createInvoiceFile(Invoice invoice) {
     try {
-      User user = ServiceRegistry.access(MongoService.class)
+      User user = ProviderRegistry.access(DataSourceProvider.class)
           .access(UserDataSource.class)
           .byId(invoice.getUserId().toString(), User.class);
 
@@ -232,7 +239,8 @@ public class InvoiceUtils {
     }
   }
 
-  public static List<String> generateExportablePositions(List<InvoicePosition> positions, String positionTemplate, AtomicInteger positionIndex) {
+  public static List<String> generateExportablePositions(List<InvoicePosition> positions, String positionTemplate,
+                                                         AtomicInteger positionIndex) {
     List<String> exportablePositions = new ArrayList<>();
     for (InvoicePosition position : positions) {
       if (position.getPrice() != 0) {

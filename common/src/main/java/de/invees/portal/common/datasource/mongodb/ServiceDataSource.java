@@ -1,16 +1,13 @@
 package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.order.Order;
+import de.invees.portal.common.model.service.Service;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import java.util.List;
-
-public class OrderDataSource implements DataSource<Order> {
+public class ServiceDataSource implements DataSource<Service> {
 
   @Getter
   private MongoCollection<Document> collection;
@@ -26,16 +23,5 @@ public class OrderDataSource implements DataSource<Order> {
   @Override
   public Bson listFilter() {
     return null;
-  }
-
-  public void update(Order order) {
-    this.getCollection().replaceOne(
-        Filters.eq(Order.ID, order.getId().toString()),
-        this.map(order)
-    );
-  }
-
-  public List<Order> byInvoiceId(long id) {
-    return this.list(Order.class, Filters.eq(Order.INVOICE_ID, id)).getItems();
   }
 }

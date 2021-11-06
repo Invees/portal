@@ -4,12 +4,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import de.invees.portal.common.datasource.MongoService;
+import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.GatewayDataDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceFileDataSource;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
 import de.invees.portal.common.exception.UnauthorizedException;
+import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
 import de.invees.portal.common.model.gateway.GatewayData;
 import de.invees.portal.common.model.gateway.GatewayDataType;
 import de.invees.portal.common.model.invoice.Invoice;
@@ -18,10 +19,12 @@ import de.invees.portal.common.model.invoice.InvoiceStatus;
 import de.invees.portal.common.model.order.Order;
 import de.invees.portal.common.model.order.OrderStatus;
 import de.invees.portal.common.model.user.permission.PermissionType;
-import de.invees.portal.common.gateway.paypal.PayPalGatewayService;
+import de.invees.portal.common.nats.NatsProvider;
+import de.invees.portal.common.nats.Subject;
+import de.invees.portal.common.nats.message.payment.PaymentMessage;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.service.LazyLoad;
-import de.invees.portal.common.utils.service.ServiceRegistry;
+import de.invees.portal.common.utils.provider.LazyLoad;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.Application;
 import de.invees.portal.core.utils.TokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
@@ -37,7 +40,7 @@ import static spark.Spark.post;
 
 public class InvoiceController extends Controller {
 
-  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
+  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public InvoiceController() {
     get("/invoice/", this::list);
@@ -72,15 +75,13 @@ public class InvoiceController extends Controller {
           GatewayDataType.PAYPAL,
           orderResponse
       ));
-      List<Order> orders = orderDataSource().
-          list(Order.class, Filters.eq(Order.INVOICE_ID, invoice.getId()))
-          .getItems();
+      List<Order> orders = orderDataSource().byInvoiceId(invoice.getId());
 
       for (Order order : orders) {
         order.setStatus(OrderStatus.PROCESSING);
         orderDataSource().update(order);
       }
-      // NOW WE SEND A NATS MESSAGE TO CREATE THE SERVICES FROM ORDERS
+      ProviderRegistry.access(NatsProvider.class).send(Subject.PAYMENT, new PaymentMessage(invoice.getId()));
     }
     return GsonUtils.toJson(orderResponse);
   }
@@ -173,8 +174,8 @@ public class InvoiceController extends Controller {
     return this.connection.get().access(GatewayDataDataSource.class);
   }
 
-  private PayPalGatewayService payPalGateway() {
-    return ServiceRegistry.access(PayPalGatewayService.class);
+  private PayPalGatewayProvider payPalGateway() {
+    return ProviderRegistry.access(PayPalGatewayProvider.class);
   }
 
 }

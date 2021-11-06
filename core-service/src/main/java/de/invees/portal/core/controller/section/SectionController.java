@@ -3,8 +3,8 @@ package de.invees.portal.core.controller.section;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.service.LazyLoad;
-import de.invees.portal.common.datasource.MongoService;
+import de.invees.portal.common.utils.provider.LazyLoad;
+import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
 import de.invees.portal.common.model.section.Section;
@@ -15,7 +15,7 @@ import static spark.Spark.get;
 
 public class SectionController {
 
-  private final LazyLoad<MongoService> connection = new LazyLoad<>(MongoService.class);
+  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public SectionController() {
     get("/section/", this::list);

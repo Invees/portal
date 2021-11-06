@@ -1,11 +1,11 @@
 package de.invees.portal.core.utils;
 
-import de.invees.portal.common.utils.service.ServiceRegistry;
-import de.invees.portal.common.datasource.MongoService;
+import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
 import de.invees.portal.common.model.user.User;
 import de.invees.portal.common.model.user.UserAuthentication;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import spark.Request;
 
 import java.security.SecureRandom;
@@ -19,8 +19,9 @@ public class TokenUtils {
   private static final char[] BUF = new char[SECURE_TOKEN_LENGTH];
 
   public static String nextToken() {
-    for (int idx = 0; idx < BUF.length; ++idx)
+    for (int idx = 0; idx < BUF.length; ++idx) {
       BUF[idx] = SYMBOLS[RANDOM.nextInt(SYMBOLS.length)];
+    }
     return new String(BUF);
   }
 
@@ -47,10 +48,10 @@ public class TokenUtils {
   }
 
   private static UserDataSource userDataSource() {
-    return ServiceRegistry.access(MongoService.class).access(UserDataSource.class);
+    return ProviderRegistry.access(DataSourceProvider.class).access(UserDataSource.class);
   }
 
   private static UserAuthenticationDataSource userAuthenticationDataSource() {
-    return ServiceRegistry.access(MongoService.class).access(UserAuthenticationDataSource.class);
+    return ProviderRegistry.access(DataSourceProvider.class).access(UserAuthenticationDataSource.class);
   }
 }
