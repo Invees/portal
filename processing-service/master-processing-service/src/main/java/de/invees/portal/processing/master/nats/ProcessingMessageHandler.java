@@ -1,10 +1,13 @@
 package de.invees.portal.processing.master.nats;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.ServiceDataSource;
+import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.order.Order;
+import de.invees.portal.common.model.order.OrderStatus;
 import de.invees.portal.common.model.product.Product;
 import de.invees.portal.common.model.service.Service;
 import de.invees.portal.common.nats.MessageHandler;
@@ -24,6 +27,7 @@ public class ProcessingMessageHandler implements MessageHandler {
 
   @Override
   public void handle(Message message) {
+    System.out.println(message);
     if (message instanceof HandshakeMessage) {
       execHandle((HandshakeMessage) message);
     } else if (message instanceof KeepAliveMessage) {
@@ -36,7 +40,12 @@ public class ProcessingMessageHandler implements MessageHandler {
   private void execHandle(ServiceCreatedMessage message) {
     Application.LOGGER.info("Service with id '" + message.getServiceId() + "' was created on '" + message.getWorkerId() + "'!");
     Order order = orderDataSource().byId(message.getOrderId(), Order.class);
+    Invoice invoice = invoiceDataSource().byId(order.getInvoiceId(), Invoice.class);
+
     Product product = productDataSource().byId(order.getRequest().getProductId(), Product.class);
+    order.setStatus(OrderStatus.COMPLETED);
+    orderDataSource().update(order);
+    invoice.getServiceIdList().add(message.getServiceId());
 
     serviceDataSource().create(new Service(
         message.getServiceId(),
@@ -45,6 +54,7 @@ public class ProcessingMessageHandler implements MessageHandler {
         message.getWorkerId(),
         product.getType()
     ));
+    invoiceDataSource().update(invoice);
   }
 
   private void execHandle(HandshakeMessage message) {
@@ -67,5 +77,9 @@ public class ProcessingMessageHandler implements MessageHandler {
 
   public ServiceDataSource serviceDataSource() {
     return ProviderRegistry.access(DataSourceProvider.class).access(ServiceDataSource.class);
+  }
+
+  public InvoiceDataSource invoiceDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(InvoiceDataSource.class);
   }
 }

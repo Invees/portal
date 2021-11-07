@@ -87,8 +87,9 @@ public class PveClient {
   }
 
   public VirtualMachine getMachine(UUID serviceId) {
-    List<VirtualMachine> machines = new ArrayList<>();
+    List<VirtualMachine> machines = getVirtualMachines();
     for (VirtualMachine machine : machines) {
+      System.out.println(machine.getName());
       if (machine.getName().equalsIgnoreCase(serviceId.toString())) {
         return machine;
       }

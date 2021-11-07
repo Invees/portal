@@ -60,7 +60,7 @@ public class InvoiceController extends Controller {
 
     if (!orderResponse.purchaseUnits().get(0).referenceId().equalsIgnoreCase(invoice.getId() + "")) {
       Application.LOGGER.error("------------------------------------");
-      Application.LOGGER.error("Invalid invoice for payment. Did the user tryed to d some illegal stuff?");
+      Application.LOGGER.error("Invalid invoice for payment. Did the user tryed to do some illegal stuff?");
       Application.LOGGER.error("orderResponse = " + GsonUtils.toJson(orderResponse));
       Application.LOGGER.error("user = " + GsonUtils.toJson(TokenUtils.parseToken(req)));
       Application.LOGGER.error("invoice = " + GsonUtils.toJson(invoice));

@@ -55,6 +55,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
         if (machine != null) {
           break;
         }
+        System.out.println("WAAITING FPR" + machine);
       }
       this.natsProvider.send(Subject.PROCESSING, new ServiceCreatedMessage(
           order.getId(),

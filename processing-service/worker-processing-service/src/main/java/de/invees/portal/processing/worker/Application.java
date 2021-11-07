@@ -64,7 +64,7 @@ public class Application extends BasicApplication {
 
   private void loadServiceProvider() {
     if (this.configuration.getServiceType() == ServiceType.VIRTUAL_SERVER) {
-      ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration.getProxmox());
+      ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration);
       ProviderRegistry.register(ServiceProvider.class, provider);
       ProviderRegistry.register(ProxmoxServiceProvider.class, provider);
     }
