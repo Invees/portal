@@ -9,6 +9,7 @@ import de.invees.portal.common.datasource.mongodb.GatewayDataDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceFileDataSource;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
+import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
 import de.invees.portal.common.model.gateway.GatewayData;
@@ -18,7 +19,6 @@ import de.invees.portal.common.model.invoice.InvoiceFile;
 import de.invees.portal.common.model.invoice.InvoiceStatus;
 import de.invees.portal.common.model.order.Order;
 import de.invees.portal.common.model.order.OrderStatus;
-import de.invees.portal.common.model.user.permission.PermissionType;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.payment.PaymentMessage;
@@ -44,26 +44,27 @@ public class InvoiceController extends Controller {
 
   public InvoiceController() {
     get("/invoice/", this::list);
-    get("/invoice/:invoiceId/", this::getInvoice);
-    get("/invoice/:invoiceId/file/", this::getFile);
-    get("/invoice/:invoiceId/paypal/", this::getPaymentData);
-    post("/invoice/:invoiceId/paypal/callback/", this::capturePaymentData);
+    get("/invoice/:invoice/", this::getInvoice);
+    get("/invoice/:invoice/file/", this::getFile);
+    get("/invoice/:invoice/paypal/", this::getPaymentData);
+    post("/invoice/:invoice/paypal/callback/", this::capturePaymentData);
   }
 
   private Object capturePaymentData(Request req, Response resp) throws IOException {
     Invoice invoice = invoice(invoiceDataSource(), req);
-    if (!isSameUser(req, invoice.getUserId())) {
+    if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     JsonObject object = JsonParser.parseString(req.body()).getAsJsonObject();
-    com.paypal.orders.Order orderResponse = payPalGateway().validate(object.get("orderId").getAsString()).result();
+    com.paypal.orders.Order orderResponse = payPalGateway().validate(object.get("orderID").getAsString()).result();
 
     if (!orderResponse.purchaseUnits().get(0).referenceId().equalsIgnoreCase(invoice.getId() + "")) {
       Application.LOGGER.error("------------------------------------");
-      Application.LOGGER.error("Invalid invoice for payment. Did the user tryed to d some illegal stuff?");
+      Application.LOGGER.error("Invalid invoice for payment. Did the user tryed to do some illegal stuff?");
       Application.LOGGER.error("orderResponse = " + GsonUtils.toJson(orderResponse));
       Application.LOGGER.error("user = " + GsonUtils.toJson(TokenUtils.parseToken(req)));
       Application.LOGGER.error("invoice = " + GsonUtils.toJson(invoice));
+      Application.LOGGER.error("IP = " + req.ip());
       Application.LOGGER.error("------------------------------------");
       throw new UnauthorizedException("INVALID_PAYMENT_INVOICE");
     }
@@ -75,7 +76,7 @@ public class InvoiceController extends Controller {
           GatewayDataType.PAYPAL,
           orderResponse
       ));
-      List<Order> orders = orderDataSource().byInvoiceId(invoice.getId());
+      List<Order> orders = orderDataSource().byInvoice(invoice.getId());
 
       for (Order order : orders) {
         order.setStatus(OrderStatus.PROCESSING);
@@ -88,7 +89,7 @@ public class InvoiceController extends Controller {
 
   private Object getPaymentData(Request req, Response resp) throws IOException {
     Invoice invoice = invoice(invoiceDataSource(), req);
-    if (!isSameUser(req, invoice.getUserId())) {
+    if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     return GsonUtils.GSON.toJson(
@@ -98,19 +99,17 @@ public class InvoiceController extends Controller {
 
   private Object getInvoice(Request req, Response resp) throws IOException {
     Invoice invoice = invoice(invoiceDataSource(), req);
-    if (!isPermitted(req, PermissionType.VIEW_INVOICE, invoice.getId() + "", invoice.getUserId().toString())
-        && !isSameUser(req, invoice.getUserId())) {
+    if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     return GsonUtils.GSON.toJson(
-        invoiceDataSource().byId(Integer.valueOf(req.params("invoiceId")), Invoice.class)
+        invoiceDataSource().byId(Integer.valueOf(req.params("invoice")), Invoice.class)
     );
   }
 
   private Object getFile(Request req, Response resp) throws IOException {
     Invoice invoice = invoice(invoiceDataSource(), req);
-    if (!isPermitted(req, PermissionType.VIEW_INVOICE, invoice.getId() + "", invoice.getUserId().toString())
-        && !isSameUser(req, invoice.getUserId())) {
+    if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     byte[] data = invoiceFileDataSource().byId(invoice.getId(), InvoiceFile.class).getData();
@@ -126,16 +125,15 @@ public class InvoiceController extends Controller {
   }
 
   public Object list(Request req, Response resp) {
-    if (req.queryParams("userId") != null) {
+    if (req.queryParams("belongsTo") != null) {
       return listForUser(req, resp);
-    } else {
-      return listAll(req, resp);
     }
+    throw new InputException("MISSING_ARGUMENT");
   }
 
   private Object listForUser(Request req, Response resp) {
-    UUID userId = UUID.fromString(req.queryParams("userId"));
-    if (!isPermitted(req, PermissionType.VIEW_INVOICE, userId.toString()) && !isSameUser(req, userId)) {
+    UUID user = UUID.fromString(req.queryParams("belongsTo"));
+    if (!isSameUser(req, user)) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     return GsonUtils.GSON.toJson(
@@ -143,18 +141,9 @@ public class InvoiceController extends Controller {
             invoiceDataSource(),
             req,
             Invoice.class,
-            Filters.eq(Invoice.USER_ID, userId.toString()),
+            Filters.eq(Invoice.BELONGS_TO, user.toString()),
             Sorts.descending(Invoice.DATE)
         )
-    );
-  }
-
-  private Object listAll(Request req, Response resp) {
-    if (isPermitted(req, PermissionType.VIEW_INVOICE, "*")) {
-      throw new UnauthorizedException("UNAUTHORIZED");
-    }
-    return GsonUtils.GSON.toJson(
-        list(invoiceDataSource(), req, Invoice.class)
     );
   }
 

@@ -19,8 +19,8 @@ public class SectionController {
 
   public SectionController() {
     get("/section/", this::list);
-    get("/section/:sectionId/", this::byId);
-    get("/section/:sectionId/product/", this::listForSection);
+    get("/section/:section/", this::byId);
+    get("/section/:section/product/", this::listForSection);
   }
 
   public Object list(Request req, Response resp) {
@@ -28,16 +28,16 @@ public class SectionController {
   }
 
   public Object byId(Request req, Response resp) {
-    return GsonUtils.GSON.toJson(section(req.params("sectionId")));
+    return GsonUtils.GSON.toJson(section(req.params("section")));
   }
 
   private Object listForSection(Request req, Response resp) {
-    Section section = section(req.params("sectionId"));
+    Section section = section(req.params("section"));
     if (section == null) {
       throw new InputException("INVALID_SECTION");
     }
     return GsonUtils.GSON.toJson(
-        productDataSource().listForSection(section(req.params("sectionId")).getId(), Product.class)
+        productDataSource().listForSection(section(req.params("section")).getId(), Product.class)
     );
   }
 

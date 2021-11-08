@@ -14,8 +14,8 @@ import java.util.UUID;
 public class Invoice implements Model {
 
   public static String ID = "_id";
-  public static String USER_ID = "userId";
-  public static String SERVICE_ID_LIST = "serviceIdList";
+  public static String BELONGS_TO = "belongsTo";
+  public static String SERVICE_LIST = "serviceList";
   public static String PRICE = "price";
   public static String DATE = "date";
   public static String POSITION_LIST = "positionList";
@@ -23,8 +23,8 @@ public class Invoice implements Model {
 
   @SerializedName("_id")
   private long id;
-  private UUID userId;
-  private List<UUID> serviceIdList;
+  private UUID belongsTo;
+  private List<UUID> serviceList;
   private Price price;
   private long date;
   private List<InvoicePosition> positionList;
@@ -33,8 +33,8 @@ public class Invoice implements Model {
   public static String[] projection() {
     return new String[]{
         ID,
-        USER_ID,
-        SERVICE_ID_LIST,
+        BELONGS_TO,
+        SERVICE_LIST,
         PRICE,
         DATE,
         POSITION_LIST,

@@ -35,7 +35,7 @@ public class OrderDataSource implements DataSource<Order> {
     );
   }
 
-  public List<Order> byInvoiceId(long id) {
-    return this.list(Order.class, Filters.eq(Order.INVOICE_ID, id)).getItems();
+  public List<Order> byInvoice(long id) {
+    return this.list(Order.class, Filters.eq(Order.INVOICE, id)).getItems();
   }
 }

@@ -17,6 +17,8 @@ import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public interface DataSource<T> {
 
@@ -40,7 +42,11 @@ public interface DataSource<T> {
   }
 
   default <Y extends Model> Y byId(Object id, Class<Y> type) {
-    return wrapped(getCollection().find(Filters.eq("_id", id)), type)
+    Object parsedId = id;
+    if (id instanceof UUID) {
+      parsedId = id.toString();
+    }
+    return wrapped(getCollection().find(Filters.eq("_id", parsedId)), type)
         .first();
   }
 
@@ -58,11 +64,12 @@ public interface DataSource<T> {
     if (sort != null) {
       iterable.sort(sort);
     }
+    List<Y> data = wrapped(iterable, type)
+        .into(new ArrayList<>());
 
     return new PagedResponse(
-        -1,
-        wrapped(iterable, type)
-            .into(new ArrayList<>())
+        data.size(),
+        data
     );
   }
 

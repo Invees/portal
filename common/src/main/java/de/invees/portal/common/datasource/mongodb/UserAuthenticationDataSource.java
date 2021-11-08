@@ -35,7 +35,7 @@ public class UserAuthenticationDataSource implements DataSource<UserAuthenticati
   public <Y extends Model> List<Y> byUser(UUID userId, UserAuthenticationType authenticationType, Class<Y> type) {
     return wrapped(
         collection.find(Filters.and(
-            Filters.eq(UserAuthentication.USER_ID, userId.toString()),
+            Filters.eq(UserAuthentication.USER, userId.toString()),
             Filters.eq(UserAuthentication.TYPE, authenticationType.toString())
         )),
         type

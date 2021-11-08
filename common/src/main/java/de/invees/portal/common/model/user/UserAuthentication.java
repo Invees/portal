@@ -13,20 +13,20 @@ import java.util.UUID;
 public class UserAuthentication implements Model {
 
   public static String ID = "_id";
-  public static String USER_ID = "userId";
+  public static String USER = "user";
   public static String TYPE = "type";
   public static String DATA = "data";
 
   @SerializedName("_id")
   private UUID id;
-  private UUID userId;
+  private UUID user;
   private UserAuthenticationType type;
   private Map<String, Object> data;
 
   public static String[] projection() {
     return new String[]{
         ID,
-        USER_ID,
+        USER,
         TYPE,
         DATA
     };

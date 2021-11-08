@@ -57,8 +57,8 @@ public class InvoiceUtils {
   }
 
   private static double calculateOrderRequest(OrderRequest orderRequest, List<InvoicePosition> positions) {
-    Product product = product(orderRequest.getProductId());
-    Section section = section(product.getSectionId());
+    Product product = product(orderRequest.getProduct());
+    Section section = section(product.getSection());
     if (!product.isActive() || !section.isActive()) {
       throw new CalculationException("PRODUCT_INACTIVE");
     }
@@ -196,7 +196,7 @@ public class InvoiceUtils {
     try {
       User user = ProviderRegistry.access(DataSourceProvider.class)
           .access(UserDataSource.class)
-          .byId(invoice.getUserId().toString(), User.class);
+          .byId(invoice.getBelongsTo().toString(), User.class);
 
       ByteArrayOutputStream invoiceBytes = new ByteArrayOutputStream();
       String invoiceTemplate = TemplateUtils.loadTemplate("invoice/de/index.html");

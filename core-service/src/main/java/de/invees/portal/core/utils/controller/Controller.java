@@ -63,7 +63,7 @@ public class Controller {
   // Invoice
   public Invoice invoice(InvoiceDataSource dataSource, Request req) {
     Invoice invoice = dataSource.byId(
-        InputUtils.integerByString(req.params("invoiceId"), -1), Invoice.class
+        InputUtils.integerByString(req.params("invoice"), -1), Invoice.class
     );
     if (invoice == null) {
       throw new InputException("INVOICE_NOT_FOUND");

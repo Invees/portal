@@ -18,7 +18,7 @@ public class Product implements Model {
   public static String ID = "_id";
   public static String DISPLAY_NAME = "displayName";
   public static String DESCRIPTION = "description";
-  public static String SECTION_ID = "sectionId";
+  public static String SECTION = "section";
   public static String TYPE = "type";
   public static String FIELD_LIST = "fieldList";
   public static String PRICE = "price";
@@ -26,7 +26,7 @@ public class Product implements Model {
 
   @SerializedName("_id")
   private String id;
-  private String sectionId;
+  private String section;
   private Display displayName;
   private String description;
   private Map<String, ProductFieldValue> fieldList;
@@ -39,7 +39,7 @@ public class Product implements Model {
         ID,
         DISPLAY_NAME,
         DESCRIPTION,
-        SECTION_ID,
+        SECTION,
         FIELD_LIST,
         TYPE,
         PRICE,

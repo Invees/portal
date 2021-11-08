@@ -19,7 +19,7 @@ public class ProductPrototype implements Model {
     return new String[]{
         Product.ID,
         Product.DISPLAY_NAME,
-        Product.SECTION_ID
+        Product.SECTION
     };
   }
 

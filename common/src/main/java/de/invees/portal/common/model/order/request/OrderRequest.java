@@ -10,7 +10,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class OrderRequest implements Model {
 
-  private String productId;
+  private String product;
   private Map<String, Object> configuration;
   private int contractTerm;
 

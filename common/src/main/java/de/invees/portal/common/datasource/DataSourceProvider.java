@@ -52,6 +52,7 @@ public class DataSourceProvider implements Provider {
     dataSourceMap.put(InvoiceDataSource.class, new InvoiceDataSource());
     dataSourceMap.put(InvoiceFileDataSource.class, new InvoiceFileDataSource());
     dataSourceMap.put(GatewayDataDataSource.class, new GatewayDataDataSource());
+    dataSourceMap.put(ServiceDataSource.class, new ServiceDataSource());
 
     dataSourceMap.forEach((k, d) -> d.init(
         database.getCollection(k.getSimpleName().replace("DataSource", "")),

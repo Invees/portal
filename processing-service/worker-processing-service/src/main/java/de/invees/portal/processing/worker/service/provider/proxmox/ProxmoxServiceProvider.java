@@ -40,7 +40,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       UUID serviceId = UUID.randomUUID();
 
       OrderRequest request = order.getRequest();
-      Product product = productDataSource().byId(request.getProductId(), Product.class);
+      Product product = productDataSource().byId(request.getProduct(), Product.class);
       VirtualMachineCreate create = VirtualMachineCreate.builder()
           .vmid(pveClient.getNextId())
           .name(serviceId.toString())
