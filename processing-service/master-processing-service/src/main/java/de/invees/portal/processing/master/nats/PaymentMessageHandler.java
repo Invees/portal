@@ -5,7 +5,6 @@ import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.order.Order;
-import de.invees.portal.common.model.order.OrderStatus;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.message.payment.PaymentMessage;
@@ -33,7 +32,7 @@ public class PaymentMessageHandler implements MessageHandler {
 
   private void execHandle(PaymentMessage message) {
     Invoice invoice = invoiceDataSource().byId(message.getInvoiceId(), Invoice.class);
-    List<Order> orders = orderDataSource().byInvoiceId(invoice.getId());
+    List<Order> orders = orderDataSource().byInvoice(invoice.getId());
     for (Order order : orders) {
       workerRegistry.process(order);
     }

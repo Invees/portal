@@ -36,7 +36,7 @@ public class ProductDataSource implements DataSource<Product> {
         -1,
         wrapped(
             collection.find(Filters.and(
-                Filters.eq(Product.SECTION_ID, sectionId),
+                Filters.eq(Product.SECTION, sectionId),
                 Filters.eq(Section.ACTIVE, true)
             )),
             type

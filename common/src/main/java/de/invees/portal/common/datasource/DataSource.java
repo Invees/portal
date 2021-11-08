@@ -17,6 +17,7 @@ import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public interface DataSource<T> {
@@ -63,11 +64,12 @@ public interface DataSource<T> {
     if (sort != null) {
       iterable.sort(sort);
     }
+    List<Y> data = wrapped(iterable, type)
+        .into(new ArrayList<>());
 
     return new PagedResponse(
-        -1,
-        wrapped(iterable, type)
-            .into(new ArrayList<>())
+        data.size(),
+        data
     );
   }
 

@@ -10,6 +10,7 @@ import de.invees.portal.core.controller.invoice.InvoiceController;
 import de.invees.portal.core.controller.order.OrderController;
 import de.invees.portal.core.controller.product.ProductController;
 import de.invees.portal.core.controller.section.SectionController;
+import de.invees.portal.core.controller.service.ServiceController;
 import de.invees.portal.core.controller.user.UserController;
 
 import java.util.List;
@@ -23,7 +24,8 @@ public class HttpServerProvider implements Provider {
       OrderController.class,
       UserController.class,
       InvoiceController.class,
-      ProductController.class
+      ProductController.class,
+      ServiceController.class
   );
 
   public HttpServerProvider(Configuration configuration) {

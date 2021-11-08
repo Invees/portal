@@ -12,21 +12,21 @@ import java.util.UUID;
 public class Service implements Model {
 
   public static String ID = "_id";
-  public static String USER_ID = "userId";
-  public static String PARENT_ORDER_ID = "parentOrderId";
-  public static String WORKER_ID = "workerId";
+  public static String BELONGS_TO = "belongsTo";
+  public static String PARENT_ORDER = "parentOrder";
+  public static String WORKER = "worker";
   public static String SERVICE_TYPE = "type";
 
   @SerializedName("_id")
   private UUID id;
-  private UUID userId;
-  private UUID parentOrderId; // the order which belongs to this service, can be changed on upgrades etc.
-  private UUID workerId;
+  private UUID belongsTo;
+  private UUID parentOrder; // the order which belongs to this service, can be changed on upgrades etc.
+  private UUID worker;
   private ServiceType type;
 
   public static String[] projection() {
     return new String[]{
-        ID, USER_ID, PARENT_ORDER_ID, WORKER_ID, SERVICE_TYPE
+        ID, BELONGS_TO, PARENT_ORDER, WORKER, SERVICE_TYPE
     };
   }
 }

@@ -45,7 +45,7 @@ public class WorkerRegistryProvider implements Provider {
   }
 
   public void process(Order order) {
-    Product product = productDataSource().byId(order.getRequest().getProductId(), Product.class);
+    Product product = productDataSource().byId(order.getRequest().getProduct(), Product.class);
     Map<UUID, ProcessingWorker> workers = workerMap.get(product.getType());
     UUID bestWorker = null;
     double bestUsage = 101;

@@ -16,11 +16,11 @@ public class ProductController {
 
   public ProductController() {
     get("/product/", this::list);
-    get("/product/:productId/", this::byId);
+    get("/product/:product/", this::byId);
   }
 
   private Object byId(Request req, Response res) {
-    return GsonUtils.GSON.toJson(product(req.params("productId")));
+    return GsonUtils.GSON.toJson(product(req.params("product")));
   }
 
   public Object list(Request req, Response resp) {

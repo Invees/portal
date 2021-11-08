@@ -14,6 +14,7 @@ import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.*;
+import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.master.Application;
 import de.invees.portal.processing.master.worker.WorkerRegistryProvider;
@@ -27,7 +28,6 @@ public class ProcessingMessageHandler implements MessageHandler {
 
   @Override
   public void handle(Message message) {
-    System.out.println(message);
     if (message instanceof HandshakeMessage) {
       execHandle((HandshakeMessage) message);
     } else if (message instanceof KeepAliveMessage) {
@@ -40,16 +40,16 @@ public class ProcessingMessageHandler implements MessageHandler {
   private void execHandle(ServiceCreatedMessage message) {
     Application.LOGGER.info("Service with id '" + message.getServiceId() + "' was created on '" + message.getWorkerId() + "'!");
     Order order = orderDataSource().byId(message.getOrderId(), Order.class);
-    Invoice invoice = invoiceDataSource().byId(order.getInvoiceId(), Invoice.class);
+    Invoice invoice = invoiceDataSource().byId(order.getInvoice(), Invoice.class);
 
-    Product product = productDataSource().byId(order.getRequest().getProductId(), Product.class);
+    Product product = productDataSource().byId(order.getRequest().getProduct(), Product.class);
     order.setStatus(OrderStatus.COMPLETED);
     orderDataSource().update(order);
-    invoice.getServiceIdList().add(message.getServiceId());
+    invoice.getServiceList().add(message.getServiceId());
 
     serviceDataSource().create(new Service(
         message.getServiceId(),
-        order.getUserId(),
+        order.getBelongsTo(),
         order.getId(),
         message.getWorkerId(),
         product.getType()

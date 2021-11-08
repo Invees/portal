@@ -12,8 +12,8 @@ public class Command implements Model {
 
   @SerializedName("_id")
   private UUID id;
-  private UUID userId;
-  private UUID serviceId;
+  private UUID user;
+  private UUID service;
   private String action;
   private Map<String, Object> data;
 
