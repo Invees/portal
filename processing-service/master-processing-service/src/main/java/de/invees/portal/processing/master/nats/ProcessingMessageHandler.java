@@ -14,7 +14,6 @@ import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.*;
-import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.master.Application;
 import de.invees.portal.processing.master.worker.WorkerRegistryProvider;
@@ -49,6 +48,7 @@ public class ProcessingMessageHandler implements MessageHandler {
 
     serviceDataSource().create(new Service(
         message.getServiceId(),
+        product.getDisplayName().getDe() + "-" + invoice.getId(),
         order.getBelongsTo(),
         order.getId(),
         message.getWorkerId(),

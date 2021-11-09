@@ -2,9 +2,11 @@ package de.invees.portal.core.utils.controller;
 
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
+import de.invees.portal.common.datasource.mongodb.OrderDataSource;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.invoice.Invoice;
+import de.invees.portal.common.model.order.Order;
 import de.invees.portal.common.model.user.User;
 import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.core.utils.TokenUtils;
@@ -54,10 +56,18 @@ public class Controller {
     if (user == null) {
       return false;
     }
-    if (!user.getId().equals(userId)) {
-      return false;
+    return userId.equals(user.getId());
+  }
+
+  // Order
+  public Order order(OrderDataSource dataSource, Request req) {
+    Order order = dataSource.byId(
+        UUID.fromString(req.params("order")), Order.class
+    );
+    if (order == null) {
+      throw new InputException("ORDER_NOT_FOUND");
     }
-    return true;
+    return order;
   }
 
   // Invoice
