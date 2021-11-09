@@ -1,12 +1,10 @@
 package de.invees.portal.core.controller.service;
 
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Sorts;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.*;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
-import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.service.Service;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;

@@ -18,6 +18,7 @@ import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
 
@@ -25,18 +26,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static spark.Spark.get;
 import static spark.Spark.post;
 
-public class OrderController {
+public class OrderController extends Controller {
 
   private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public OrderController() {
-    post("/order/preview/", this::preview);
-    post("/order/", this::order);
+    get("/order/:order/", this::byId);
+    post("/order/preview/", this::previewOrder);
+    post("/order/", this::placeOrder);
   }
 
-  public Object preview(Request req, Response resp) {
+  private Object byId(Request req, Response res) {
+    Order order = order(orderDataSource(), req);
+    if (!isSameUser(req, order.getBelongsTo())) {
+      throw new UnauthorizedException("UNAUTHORIZED");
+    }
+    return GsonUtils.GSON.toJson(order);
+  }
+
+  public Object previewOrder(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     List<OrderRequest> orderRequests = new ArrayList<>();
     for (JsonElement ele : body.get("orderRequests").getAsJsonArray()) {
@@ -45,7 +56,7 @@ public class OrderController {
     return GsonUtils.GSON.toJson(InvoiceUtils.calculate(-1, null, orderRequests));
   }
 
-  public Object order(Request req, Response resp) {
+  public Object placeOrder(Request req, Response resp) {
     User user = TokenUtils.parseToken(req);
     if (user == null) {
       throw new UnauthorizedException("UNAUTHORIZED");
