@@ -103,7 +103,7 @@ public class InvoiceController extends Controller {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     return GsonUtils.GSON.toJson(
-        invoiceDataSource().byId(Integer.valueOf(req.params("invoice")), Invoice.class)
+        invoice
     );
   }
 

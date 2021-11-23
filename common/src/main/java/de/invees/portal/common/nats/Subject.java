@@ -4,5 +4,6 @@ public class Subject {
 
   public static final String PROCESSING = "PROCESSING";
   public static final String PAYMENT = "PAYMENT";
+  public static final String STATUS = "STATUS";
 
 }

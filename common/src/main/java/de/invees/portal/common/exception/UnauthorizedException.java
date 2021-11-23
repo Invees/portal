@@ -6,6 +6,10 @@ public class UnauthorizedException extends IllegalArgumentException {
 
   private final String msg;
 
+  public UnauthorizedException() {
+    this("UNAUTHORIZED");
+  }
+
   public UnauthorizedException(String msg) {
     super();
     this.msg = msg;

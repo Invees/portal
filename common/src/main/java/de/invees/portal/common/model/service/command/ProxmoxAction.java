@@ -5,5 +5,6 @@ public class ProxmoxAction {
   public static final String START = "START";
   public static final String STOP = "STOP";
   public static final String RESTART = "RESTART";
+  public static final String KILL = "KILL";
 
 }

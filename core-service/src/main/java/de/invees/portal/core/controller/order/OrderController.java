@@ -34,12 +34,12 @@ public class OrderController extends Controller {
   private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public OrderController() {
-    get("/order/:order/", this::byId);
+    get("/order/:order/", this::getOrder);
     post("/order/preview/", this::previewOrder);
     post("/order/", this::placeOrder);
   }
 
-  private Object byId(Request req, Response res) {
+  private Object getOrder(Request req, Response res) {
     Order order = order(orderDataSource(), req);
     if (!isSameUser(req, order.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
