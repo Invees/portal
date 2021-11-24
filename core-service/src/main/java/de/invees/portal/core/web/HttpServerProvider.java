@@ -2,6 +2,7 @@ package de.invees.portal.core.web;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.MalformedJsonException;
 import de.invees.portal.common.exception.*;
 import de.invees.portal.common.utils.provider.Provider;
 import de.invees.portal.core.Application;
@@ -31,7 +32,7 @@ public class HttpServerProvider implements Provider {
   public HttpServerProvider(Configuration configuration) {
     Application.LOGGER.info("Starting HttpServer on [:]:" + configuration.getPort());
     port(configuration.getPort());
-    before((request, response) -> response.type("application/json"));
+    before((request, response) -> response.type("application/json;charset=UTF-8"));
     before((request, response) -> response.header(
         "Access-Control-Allow-Origin",
         configuration.getAccessControlAllowOrigin()
@@ -55,7 +56,13 @@ public class HttpServerProvider implements Provider {
         body.addProperty("result", "error");
         body.addProperty("message", "Endpoint not found.");
       } else {
-        body.add("data", JsonParser.parseString(response.body()));
+        try {
+          body.add("data", JsonParser.parseString(response.body()));
+        } catch (Exception e) {
+          response.type("text/html");
+          response.body(response.body());
+          return;
+        }
       }
       response.body(body.toString());
     });

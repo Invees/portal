@@ -5,6 +5,7 @@ import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.*;
+import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.worker.Application;
 import de.invees.portal.processing.worker.service.provider.ServiceProvider;
@@ -41,6 +42,7 @@ public class ProcessingMessageHandler implements MessageHandler {
   }
 
   private void execHandle(ExecuteOrderMessage message) {
+    System.out.println(GsonUtils.toJson(message));
     if (!message.getWorkerId().equals(application.getConfiguration().getId())) {
       return;
     }

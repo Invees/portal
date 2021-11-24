@@ -19,7 +19,7 @@ public class SectionController {
 
   public SectionController() {
     get("/section/", this::list);
-    get("/section/:section/", this::byId);
+    get("/section/:section/", this::getSection);
     get("/section/:section/product/", this::listForSection);
   }
 
@@ -27,7 +27,7 @@ public class SectionController {
     return GsonUtils.GSON.toJson(sectionDataSource().list(Section.class));
   }
 
-  public Object byId(Request req, Response resp) {
+  public Object getSection(Request req, Response resp) {
     return GsonUtils.GSON.toJson(section(req.params("section")));
   }
 

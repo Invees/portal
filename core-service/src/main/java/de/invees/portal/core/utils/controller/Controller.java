@@ -3,10 +3,12 @@ package de.invees.portal.core.utils.controller;
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
 import de.invees.portal.common.datasource.mongodb.OrderDataSource;
+import de.invees.portal.common.datasource.mongodb.ServiceDataSource;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.invoice.Invoice;
 import de.invees.portal.common.model.order.Order;
+import de.invees.portal.common.model.service.Service;
 import de.invees.portal.common.model.user.User;
 import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.core.utils.TokenUtils;
@@ -81,4 +83,14 @@ public class Controller {
     return invoice;
   }
 
+  // Service
+  public Service service(ServiceDataSource dataSource, Request req) {
+    Service service = dataSource.byId(
+        UUID.fromString(req.params("service")), Service.class
+    );
+    if (service == null) {
+      throw new InputException("SERVICE__NOT_FOUND");
+    }
+    return service;
+  }
 }
