@@ -13,5 +13,13 @@ public class VirtualMachineCreate {
   private int cores = 1;
   @Builder.Default
   private int memory = 512;
+  @Builder.Default
+  private String sata0;
+  @Builder.Default
+  private String net0;
+  @Builder.Default
+  private int sockets = 1;
+  @Builder.Default
+  private String vga;
 
 }

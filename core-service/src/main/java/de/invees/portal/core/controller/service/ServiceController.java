@@ -37,6 +37,7 @@ public class ServiceController extends Controller {
     get("/service/:service/", this::getService);
     get("/service/:service/owner/", this::getOwner);
     post("/service/:service/execute/", this::execute);
+    post("/service/:service/console/", this::createConsole);
     get("/service/:service/status/", this::getStatus);
     get("/service/:service/console/", this::getStatus);
     get("/service/", this::list);
@@ -58,6 +59,17 @@ public class ServiceController extends Controller {
         new ExecuteCommandMessage(GsonUtils.GSON.fromJson(body, Command.class))
     );
     return body.toString();
+  }
+
+  private Object createConsole(Request req, Response resp) {
+    Service service = service(serviceDataSource(), req);
+    if (!isSameUser(req, service.getBelongsTo())) {
+      throw new UnauthorizedException();
+    }
+    System.out.println("DO!");
+    return GsonUtils.GSON.toJson(
+        serviceProvider().createConsole(service.getId())
+    );
   }
 
   private Object getOwner(Request req, Response resp) {

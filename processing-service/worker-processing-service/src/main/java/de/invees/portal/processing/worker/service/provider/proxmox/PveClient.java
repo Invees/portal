@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.invees.portal.common.model.service.console.ServiceConsole;
+import de.invees.portal.common.model.service.console.ServiceConsoleType;
 import de.invees.portal.common.model.service.status.ServiceStatus;
 import de.invees.portal.common.model.service.status.ServiceStatusType;
 import de.invees.portal.common.utils.gson.GsonUtils;
@@ -40,6 +41,8 @@ public class PveClient {
     public static final String KILL = "{%url%}/api2/json/nodes/%0$s/qemu/%1$s/status/stop";
     public static final String STATUS = "{%url%}/api2/json/nodes/%0$s/qemu/%1$s/status/current";
     public static final String SPICE = "{%url%}/api2/json/nodes/%0$s/qemu/%1$s/spiceproxy";
+    public static final String TASKS = "{%url%}/api2/json/nodes/%0$s/tasks?vmid=%1$s&source=active";
+    public static final String TASK = "{%url%}/api2/json/nodes/%0$s/tasks/%1$s";
   }
 
   private final ProxmoxConfiguration configuration;
@@ -87,11 +90,24 @@ public class PveClient {
     JsonObject data = post(
         URI.create(parse(URL.SPICE, configuration.getNode(), getMachine(service).getVmid() + "")),
         body("node", configuration.getNode())
-    ).getAsJsonObject();
-    System.out.println(data);
-    return null;
+    ).getAsJsonObject("data");
+    Map<String, Object> configuration = new HashMap<>();
+    for (String key : data.keySet()) {
+      configuration.put(key, data.get(key));
+    }
+    return new ServiceConsole(ServiceConsoleType.SPICE, configuration);
   }
 
+  public void killActiveTask(UUID service) {
+    JsonArray data = get(
+        URI.create(parse(URL.TASKS, configuration.getNode(), getMachine(service).getVmid() + ""))
+    ).getAsJsonArray("data");
+    if (data.size() == 0) {
+      return;
+    }
+    JsonObject obj = data.get(0).getAsJsonObject();
+    delete(URI.create(parse(URL.TASK, configuration.getNode(), obj.get("upid").getAsString())));
+  }
 
   public ServiceStatus getStatus(UUID service) {
     JsonObject data = get(URI.create(parse(
@@ -104,7 +120,6 @@ public class PveClient {
     configuration.put("cpu", data.get("cpus").getAsInt());
     configuration.put("memory", data.get("maxmem").getAsDouble() / 1024d / 1024d);
     configuration.put("storage", data.get("maxdisk").getAsDouble() / 1024d / 1024d);
-
     return new ServiceStatus(
         service,
         configuration,
@@ -115,6 +130,7 @@ public class PveClient {
   }
 
   public void start(UUID service) {
+    killActiveTask(service);
     post(
         URI.create(parse(URL.START, configuration.getNode(), getMachine(service).getVmid() + "")),
         new JsonObject().toString()
@@ -122,6 +138,7 @@ public class PveClient {
   }
 
   public void stop(UUID service) {
+    killActiveTask(service);
     post(
         URI.create(parse(URL.STOP, configuration.getNode(), getMachine(service).getVmid() + "")),
         new JsonObject().toString()
@@ -129,6 +146,7 @@ public class PveClient {
   }
 
   public void kill(UUID service) {
+    killActiveTask(service);
     post(
         URI.create(parse(URL.KILL, configuration.getNode(), getMachine(service).getVmid() + "")),
         new JsonObject().toString()
@@ -136,6 +154,7 @@ public class PveClient {
   }
 
   public void restart(UUID service) {
+    killActiveTask(service);
     post(
         URI.create(parse(URL.RESTART, configuration.getNode(), getMachine(service).getVmid() + "")),
         new JsonObject().toString()
@@ -210,6 +229,23 @@ public class PveClient {
       HttpRequest request = HttpRequest.newBuilder()
           .uri(uri)
           .POST(HttpRequest.BodyPublishers.ofString(body))
+          .header("Cookie", "PVEAuthCookie=" + cookie)
+          .header("CSRFPreventionToken", csrfToken)
+          .header("Content-Type", "application/json")
+          .build();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      return JsonParser.parseString(response.body()).getAsJsonObject();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  // Internal
+  private JsonObject delete(URI uri) {
+    try {
+      HttpRequest request = HttpRequest.newBuilder()
+          .uri(uri)
+          .DELETE()
           .header("Cookie", "PVEAuthCookie=" + cookie)
           .header("CSRFPreventionToken", csrfToken)
           .header("Content-Type", "application/json")

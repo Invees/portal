@@ -50,6 +50,9 @@ public class WorkerRegistryProvider implements Provider {
     UUID bestWorker = null;
     double bestUsage = 101;
     for (Map.Entry<UUID, ProcessingWorker> entry : workers.entrySet()) {
+      if (!usageMap.containsKey(entry.getKey())) {
+        continue;
+      }
       double usage = usageMap.get(entry.getKey());
       if (usage < bestUsage) {
         bestWorker = entry.getKey();

@@ -16,8 +16,6 @@ import de.invees.portal.processing.worker.service.provider.ServiceProvider;
 import de.invees.portal.processing.worker.service.provider.proxmox.ProxmoxServiceProvider;
 import lombok.Getter;
 
-import java.util.UUID;
-
 public class Application extends BasicApplication {
 
   @Getter
@@ -78,7 +76,6 @@ public class Application extends BasicApplication {
       ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration);
       ProviderRegistry.register(ServiceProvider.class, provider);
       ProviderRegistry.register(ProxmoxServiceProvider.class, provider);
-      provider.getPveClient().createConsole(UUID.fromString("612d97e2-5622-49db-93a7-8a9d0f358a7b"));
     }
   }
 

@@ -57,7 +57,7 @@ public class Application extends BasicApplication {
 
   public void loadServiceProvider() {
     LOGGER.info("Starting Service Provider..");
-    ProviderRegistry.register(ServiceProvider.class, new ServiceProvider());
+    ProviderRegistry.register(ServiceProvider.class, new ServiceProvider(ProviderRegistry.access(NatsProvider.class)));
   }
 
   public void loadMessageHandler() {

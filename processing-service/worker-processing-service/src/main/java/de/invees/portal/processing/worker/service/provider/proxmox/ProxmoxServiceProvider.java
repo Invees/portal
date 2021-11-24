@@ -46,13 +46,16 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
       OrderRequest request = order.getRequest();
       Product product = productDataSource().byId(request.getProduct(), Product.class);
+      int storage = ((Number) product.getFieldList().get("cpu").getValue()).intValue();
       VirtualMachineCreate create = VirtualMachineCreate.builder()
           .vmid(pveClient.getNextId())
           .name(serviceId.toString())
           .memory(((Number) product.getFieldList().get("memory").getValue()).intValue())
           .cores(((Number) product.getFieldList().get("cpu").getValue()).intValue())
+          .sata0(storage() + ":" + storage + ",format=qcow2")
+          .net0("virtio,bridge=vmbr0,firewall=1")
+          .vga("qxl")
           .build();
-
       pveClient.createVirtualMachine(create);
       while (true) {
         Thread.sleep(2000);
@@ -73,6 +76,9 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
   @Override
   public CommandResponse execute(Command command) {
+    if (pveClient.getMachine(command.getService()) == null) {
+      return new CommandResponse(command.getId(), false);
+    }
     if (command.getAction().equals(ProxmoxAction.START)) {
       return execHandleStart(command);
     }
@@ -120,6 +126,9 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
   @Override
   public ServiceConsole createConsole(UUID service) {
+    if (pveClient.getMachine(service) == null) {
+      return null;
+    }
     return pveClient.createConsole(service);
   }
 
@@ -148,12 +157,12 @@ public class ProxmoxServiceProvider implements ServiceProvider {
     String bestStorage = null;
     double bestUsage = Double.MAX_VALUE;
     for (Storage storage : storages) {
-      if (!storage.getName().startsWith("disk") && !storage.getName().startsWith("storage")) {
+      if (!storage.getStorage().startsWith("disk") && !storage.getStorage().startsWith("storage")) {
         continue;
       }
       double usage = storage.getUsed();
       if (usage < bestUsage) {
-        bestStorage = storage.getName();
+        bestStorage = storage.getStorage();
         bestUsage = usage;
       }
     }
