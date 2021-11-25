@@ -19,14 +19,14 @@ public class ConfigurationLoader {
   public void loadFromEnvironment(JsonObject configuration, String parent, Class<?> type) {
     Field[] fields = type.getDeclaredFields();
     for (Field field : fields) {
-      if (field.getType() == Boolean.class ||
-          field.getType() == boolean.class ||
-          field.getType() == Double.class ||
-          field.getType() == double.class ||
-          field.getType() == String.class ||
-          field.getType() == int.class ||
-          field.getType() == UUID.class ||
-          field.getType() == List.class) {
+      if (field.getType() == Boolean.class
+          || field.getType() == boolean.class
+          || field.getType() == Double.class
+          || field.getType() == double.class
+          || field.getType() == String.class
+          || field.getType() == int.class
+          || field.getType() == UUID.class
+          || field.getType() == List.class) {
         String prefix = "";
         if (!parent.isEmpty()) {
           prefix = parent + ".";

@@ -5,13 +5,11 @@ import de.invees.portal.common.configuration.DataSourceConfiguration;
 import de.invees.portal.common.configuration.NatsConfiguration;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.nats.NatsProvider;
-import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 
 public class BasicApplication {
 
