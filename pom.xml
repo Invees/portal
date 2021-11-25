@@ -7,7 +7,7 @@
     <groupId>de.invees</groupId>
     <artifactId>portal</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>develop</version>
     <modules>
         <module>core-service</module>
         <module>common</module>

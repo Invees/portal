@@ -8,6 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>master-processing-service</artifactId>
   <build>
+    <finalName>application</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>

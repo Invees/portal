@@ -5,7 +5,7 @@
     <parent>
         <artifactId>portal</artifactId>
         <groupId>de.invees</groupId>
-        <version>1.0.0</version>
+        <version>develop</version>
     </parent>
     <packaging>pom</packaging>
     <modules>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>de.invees</groupId>
             <artifactId>common</artifactId>
-            <version>1.0.0</version>
+            <version>develop</version>
         </dependency>
     </dependencies>
 </project>

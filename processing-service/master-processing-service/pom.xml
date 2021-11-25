@@ -5,7 +5,7 @@
     <parent>
         <artifactId>processing-service</artifactId>
         <groupId>de.invees</groupId>
-        <version>1.0.0</version>
+        <version>develop</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,6 +15,7 @@
         <maven.compiler.target>16</maven.compiler.target>
     </properties>
     <build>
+        <finalName>application</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
