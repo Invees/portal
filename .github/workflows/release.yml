@@ -36,11 +36,16 @@ jobs:
       working-directory: ./core-service
       run: |-
         docker build \
-          --tag "maven.pkg.github.com/invees/portal/core-service:${GITHUB_REF##*/}" \
+          --tag "ghcr.io/invees/portal/core-service:${GITHUB_REF##*/}" \
           --build-arg GITHUB_SHA="$GITHUB_SHA" \
           --build-arg GITHUB_REF="$GITHUB_REF" \
           .
 
+    # Push the Docker image to Google Container Registry
+    - name: Publish
+      run: |-
+        docker push "ghcr.io/invees/portal/core-service:${GITHUB_REF##*/}"
+        
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
       env:
