@@ -1,0 +1,8 @@
+FROM openjdk:16-alpine3.13
+
+RUN mkdir -p /invees
+
+WORKDIR /invees
+ADD target/application.jar /invees/application.jar
+
+CMD ["java", "-jar", "/invees/application.jar"]
