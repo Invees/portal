@@ -40,8 +40,16 @@ jobs:
           --build-arg GITHUB_SHA="$GITHUB_SHA" \
           --build-arg GITHUB_REF="$GITHUB_REF" \
           .
-
-    # Push the Docker image to Google Container Registry
+          
+    # Login to ghcr
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    # Public to ghcr
     - name: Publish
       run: |-
         docker push "ghcr.io/invees/portal/core-service:${GITHUB_REF##*/}"
