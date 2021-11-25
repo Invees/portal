@@ -2,7 +2,6 @@ package de.invees.portal.core.web;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.MalformedJsonException;
 import de.invees.portal.common.exception.*;
 import de.invees.portal.common.utils.provider.Provider;
 import de.invees.portal.core.Application;

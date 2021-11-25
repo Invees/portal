@@ -1,6 +1,5 @@
 package de.invees.portal.processing.worker.service.provider.proxmox.model;
 
-import lombok.Builder;
 import lombok.Data;
 
 @Data

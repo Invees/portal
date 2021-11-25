@@ -39,7 +39,7 @@ public class ServiceProvider implements Provider {
       try {
         Thread.sleep(1);
       } catch (Exception e) {
-
+        // IGNORE
       }
       if (iterations >= 10000) {
         return null;

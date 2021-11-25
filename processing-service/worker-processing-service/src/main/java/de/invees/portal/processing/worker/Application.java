@@ -72,7 +72,7 @@ public class Application extends BasicApplication {
   }
 
   private void loadServiceProvider() {
-    if (this.configuration.getServiceType() == ServiceType.VIRTUAL_SERVER) {
+    if (ServiceType.valueOf(this.configuration.getServiceType()) == ServiceType.VIRTUAL_SERVER) {
       ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration);
       ProviderRegistry.register(ServiceProvider.class, provider);
       ProviderRegistry.register(ProxmoxServiceProvider.class, provider);
@@ -104,7 +104,7 @@ public class Application extends BasicApplication {
 
   public void executeHandshake() {
     natsProvider.send(Subject.PROCESSING, new HandshakeMessage(
-        new ProcessingWorker(configuration.getId(), configuration.getServiceType())
+        new ProcessingWorker(configuration.getId(), ServiceType.valueOf(configuration.getServiceType()))
     ));
   }
 }
