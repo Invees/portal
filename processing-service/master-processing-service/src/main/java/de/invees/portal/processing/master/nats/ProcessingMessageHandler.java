@@ -1,15 +1,15 @@
 package de.invees.portal.processing.master.nats;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
-import de.invees.portal.common.datasource.mongodb.OrderDataSource;
-import de.invees.portal.common.datasource.mongodb.ProductDataSource;
-import de.invees.portal.common.datasource.mongodb.ServiceDataSource;
-import de.invees.portal.common.model.v1.invoice.Invoice;
-import de.invees.portal.common.model.v1.order.Order;
-import de.invees.portal.common.model.v1.order.OrderStatus;
-import de.invees.portal.common.model.v1.product.Product;
-import de.invees.portal.common.model.v1.service.Service;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.order.OrderStatusV1;
+import de.invees.portal.common.model.v1.product.ProductV1;
+import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
@@ -38,15 +38,15 @@ public class ProcessingMessageHandler implements MessageHandler {
 
   private void execHandle(ServiceCreatedMessage message) {
     Application.LOGGER.info("Service with id '" + message.getServiceId() + "' was created on '" + message.getWorkerId() + "'!");
-    Order order = orderDataSource().byId(message.getOrderId(), Order.class);
-    Invoice invoice = invoiceDataSource().byId(order.getInvoice(), Invoice.class);
+    OrderV1 order = orderDataSource().byId(message.getOrderId(), OrderV1.class);
+    InvoiceV1 invoice = invoiceDataSource().byId(order.getInvoice(), InvoiceV1.class);
 
-    Product product = productDataSource().byId(order.getRequest().getProduct(), Product.class);
-    order.setStatus(OrderStatus.COMPLETED);
+    ProductV1 product = productDataSource().byId(order.getRequest().getProduct(), ProductV1.class);
+    order.setStatus(OrderStatusV1.COMPLETED);
     orderDataSource().update(order);
     invoice.getServiceList().add(message.getServiceId());
 
-    serviceDataSource().create(new Service(
+    serviceDataSource().create(new ServiceV1(
         message.getServiceId(),
         product.getDisplayName().getDe() + "-" + invoice.getId(),
         order.getBelongsTo(),
@@ -67,19 +67,19 @@ public class ProcessingMessageHandler implements MessageHandler {
     workerRegistry.keepAlive(message.getId(), message.getUsage());
   }
 
-  public OrderDataSource orderDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(OrderDataSource.class);
+  public OrderDataSourceV1 orderDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(OrderDataSourceV1.class);
   }
 
-  public ProductDataSource productDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(ProductDataSource.class);
+  public ProductDataSourceV1 productDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ProductDataSourceV1.class);
   }
 
-  public ServiceDataSource serviceDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(ServiceDataSource.class);
+  public ServiceDataSourceV1 serviceDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ServiceDataSourceV1.class);
   }
 
-  public InvoiceDataSource invoiceDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(InvoiceDataSource.class);
+  public InvoiceDataSourceV1 invoiceDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(InvoiceDataSourceV1.class);
   }
 }

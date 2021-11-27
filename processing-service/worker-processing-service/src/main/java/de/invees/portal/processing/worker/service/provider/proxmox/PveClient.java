@@ -4,10 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.invees.portal.common.model.v1.service.console.ServiceConsole;
-import de.invees.portal.common.model.v1.service.console.ServiceConsoleType;
-import de.invees.portal.common.model.v1.service.status.ServiceStatus;
-import de.invees.portal.common.model.v1.service.status.ServiceStatusType;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleTypeV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusTypeV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.processing.worker.Application;
 import de.invees.portal.processing.worker.configuration.ProxmoxConfiguration;
@@ -86,7 +86,7 @@ public class PveClient {
     }).start();
   }
 
-  public ServiceConsole createConsole(UUID service) {
+  public ServiceConsoleV1 createConsole(UUID service) {
     JsonObject data = post(
         URI.create(parse(URL.SPICE, configuration.getNode(), getMachine(service).getVmid() + "")),
         body("node", configuration.getNode())
@@ -95,7 +95,7 @@ public class PveClient {
     for (String key : data.keySet()) {
       configuration.put(key, data.get(key));
     }
-    return new ServiceConsole(ServiceConsoleType.SPICE, configuration);
+    return new ServiceConsoleV1(ServiceConsoleTypeV1.SPICE, configuration);
   }
 
   public void killActiveTask(UUID service) {
@@ -109,7 +109,7 @@ public class PveClient {
     delete(URI.create(parse(URL.TASK, configuration.getNode(), obj.get("upid").getAsString())));
   }
 
-  public ServiceStatus getStatus(UUID service) {
+  public ServiceStatusV1 getStatus(UUID service) {
     JsonObject data = get(URI.create(parse(
         URL.STATUS,
         configuration.getNode(),
@@ -120,10 +120,10 @@ public class PveClient {
     configuration.put("cpu", data.get("cpus").getAsInt());
     configuration.put("memory", data.get("maxmem").getAsDouble() / 1024d / 1024d);
     configuration.put("storage", data.get("maxdisk").getAsDouble() / 1024d / 1024d);
-    return new ServiceStatus(
+    return new ServiceStatusV1(
         service,
         configuration,
-        ServiceStatusType.valueOf(data.get("status").getAsString().toUpperCase()),
+        ServiceStatusTypeV1.valueOf(data.get("status").getAsString().toUpperCase()),
         null,
         data.get("uptime").getAsLong()
     );

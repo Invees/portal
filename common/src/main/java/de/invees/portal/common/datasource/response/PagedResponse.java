@@ -1,6 +1,6 @@
 package de.invees.portal.common.datasource.response;
 
-import de.invees.portal.common.model.v1.Model;
+import de.invees.portal.common.model.Model;
 import lombok.Data;
 
 import java.util.List;

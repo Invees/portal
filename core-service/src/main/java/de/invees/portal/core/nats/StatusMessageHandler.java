@@ -1,6 +1,6 @@
 package de.invees.portal.core.nats;
 
-import de.invees.portal.common.model.v1.service.status.ServiceStatus;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.message.processing.Message;
@@ -27,7 +27,7 @@ public class StatusMessageHandler implements MessageHandler {
   }
 
   private void execHandle(ServiceStatusMessage message) {
-    for (ServiceStatus status : message.getStatus()) {
+    for (ServiceStatusV1 status : message.getStatus()) {
       ProviderRegistry.access(ServiceProvider.class).apply(status);
     }
   }

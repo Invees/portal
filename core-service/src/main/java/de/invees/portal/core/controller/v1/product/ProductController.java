@@ -1,8 +1,8 @@
 package de.invees.portal.core.controller.v1.product;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.ProductDataSource;
-import de.invees.portal.common.model.v1.product.Product;
+import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
+import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import spark.Request;
@@ -24,18 +24,18 @@ public class ProductController {
   }
 
   public Object list(Request req, Response resp) {
-    return GsonUtils.GSON.toJson(productDataSource().list(Product.class));
+    return GsonUtils.GSON.toJson(productDataSource().list(ProductV1.class));
   }
 
-  private Product product(String product) {
+  private ProductV1 product(String product) {
     try {
-      return productDataSource().byId(product, Product.class);
+      return productDataSource().byId(product, ProductV1.class);
     } catch (Exception e) {
-      return productDataSource().byId(product, Product.class);
+      return productDataSource().byId(product, ProductV1.class);
     }
   }
 
-  private ProductDataSource productDataSource() {
-    return connection.get().access(ProductDataSource.class);
+  private ProductDataSourceV1 productDataSource() {
+    return connection.get().access(ProductDataSourceV1.class);
   }
 }

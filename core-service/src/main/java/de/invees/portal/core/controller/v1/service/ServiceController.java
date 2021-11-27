@@ -4,14 +4,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.ServiceDataSource;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
+import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
-import de.invees.portal.common.model.v1.service.Service;
-import de.invees.portal.common.model.v1.service.command.Command;
-import de.invees.portal.common.model.v1.user.User;
-import de.invees.portal.common.model.v1.user.UserNameDetails;
+import de.invees.portal.common.model.v1.service.ServiceV1;
+import de.invees.portal.common.model.v1.service.command.CommandV1;
+import de.invees.portal.common.model.v1.user.UserV1;
+import de.invees.portal.common.model.v1.user.UserNameDetailsV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.status.ExecuteCommandMessage;
@@ -44,25 +44,25 @@ public class ServiceController extends Controller {
   }
 
   private Object execute(Request req, Response resp) {
-    Service service = service(serviceDataSource(), req);
+    ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    User user = TokenUtils.parseToken(req);
+    UserV1 user = TokenUtils.parseToken(req);
     body.addProperty("_id", UUID.randomUUID().toString());
     body.addProperty("executor", user.getId().toString());
     body.addProperty("service", service.getId().toString());
 
     ProviderRegistry.access(NatsProvider.class).send(
         Subject.STATUS,
-        new ExecuteCommandMessage(GsonUtils.GSON.fromJson(body, Command.class))
+        new ExecuteCommandMessage(GsonUtils.GSON.fromJson(body, CommandV1.class))
     );
     return body.toString();
   }
 
   private Object createConsole(Request req, Response resp) {
-    Service service = service(serviceDataSource(), req);
+    ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -73,18 +73,18 @@ public class ServiceController extends Controller {
   }
 
   private Object getOwner(Request req, Response resp) {
-    Service service = service(serviceDataSource(), req);
+    ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
-    UserNameDetails details = userDataSource().byId(service.getBelongsTo(), UserNameDetails.class);
+    UserNameDetailsV1 details = userDataSource().byId(service.getBelongsTo(), UserNameDetailsV1.class);
     return GsonUtils.GSON.toJson(
         details
     );
   }
 
   private Object getStatus(Request req, Response resp) {
-    Service service = service(serviceDataSource(), req);
+    ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -94,7 +94,7 @@ public class ServiceController extends Controller {
   }
 
   private Object getService(Request req, Response resp) {
-    Service service = service(serviceDataSource(), req);
+    ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -119,18 +119,18 @@ public class ServiceController extends Controller {
         list(
             serviceDataSource(),
             req,
-            Service.class,
-            Filters.eq(Service.BELONGS_TO, user.toString())
+            ServiceV1.class,
+            Filters.eq(ServiceV1.BELONGS_TO, user.toString())
         )
     );
   }
 
-  private ServiceDataSource serviceDataSource() {
-    return this.connection.get().access(ServiceDataSource.class);
+  private ServiceDataSourceV1 serviceDataSource() {
+    return this.connection.get().access(ServiceDataSourceV1.class);
   }
 
-  private UserDataSource userDataSource() {
-    return this.connection.get().access(UserDataSource.class);
+  private UserDataSourceV1 userDataSource() {
+    return this.connection.get().access(UserDataSourceV1.class);
   }
 
   private ServiceProvider serviceProvider() {

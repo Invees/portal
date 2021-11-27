@@ -1,6 +1,6 @@
 package de.invees.portal.common.nats.message.status;
 
-import de.invees.portal.common.model.v1.service.status.ServiceStatus;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.message.processing.Message;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,6 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ServiceStatusMessage implements Message {
 
-  private List<ServiceStatus> status;
+  private List<ServiceStatusV1> status;
 
 }

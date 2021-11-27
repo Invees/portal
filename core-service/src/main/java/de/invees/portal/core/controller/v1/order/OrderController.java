@@ -4,16 +4,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
-import de.invees.portal.common.datasource.mongodb.InvoiceFileDataSource;
-import de.invees.portal.common.datasource.mongodb.OrderDataSource;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceFileDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
-import de.invees.portal.common.model.v1.invoice.Invoice;
-import de.invees.portal.common.model.v1.invoice.InvoiceFile;
-import de.invees.portal.common.model.v1.order.Order;
-import de.invees.portal.common.model.v1.order.OrderStatus;
-import de.invees.portal.common.model.v1.order.request.OrderRequest;
-import de.invees.portal.common.model.v1.user.User;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceFileV1;
+import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.order.OrderStatusV1;
+import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
+import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
@@ -40,7 +40,7 @@ public class OrderController extends Controller {
   }
 
   private Object getOrder(Request req, Response res) {
-    Order order = order(orderDataSource(), req);
+    OrderV1 order = order(orderDataSource(), req);
     if (!isSameUser(req, order.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -49,40 +49,40 @@ public class OrderController extends Controller {
 
   public Object previewOrder(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    List<OrderRequest> orderRequests = new ArrayList<>();
+    List<OrderRequestV1> orderRequests = new ArrayList<>();
     for (JsonElement ele : body.get("orderRequests").getAsJsonArray()) {
-      orderRequests.add(GsonUtils.GSON.fromJson(ele, OrderRequest.class));
+      orderRequests.add(GsonUtils.GSON.fromJson(ele, OrderRequestV1.class));
     }
     return GsonUtils.GSON.toJson(InvoiceUtils.calculate(-1, null, orderRequests));
   }
 
   public Object placeOrder(Request req, Response resp) {
-    User user = TokenUtils.parseToken(req);
+    UserV1 user = TokenUtils.parseToken(req);
     if (user == null) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    List<OrderRequest> orderRequests = new ArrayList<>();
+    List<OrderRequestV1> orderRequests = new ArrayList<>();
     for (JsonElement ele : body.get("orderRequests").getAsJsonArray()) {
-      orderRequests.add(GsonUtils.GSON.fromJson(ele, OrderRequest.class));
+      orderRequests.add(GsonUtils.GSON.fromJson(ele, OrderRequestV1.class));
     }
 
-    Invoice invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), user.getId(), orderRequests);
+    InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), user.getId(), orderRequests);
     byte[] data = InvoiceUtils.createInvoiceFile(invoice);
 
-    invoiceFileDataSource().create(new InvoiceFile(
+    invoiceFileDataSource().create(new InvoiceFileV1(
         invoice.getId(),
         data
     ));
 
-    for (OrderRequest orderRequest : orderRequests) {
-      Order order = new Order(
+    for (OrderRequestV1 orderRequest : orderRequests) {
+      OrderV1 order = new OrderV1(
           UUID.randomUUID(),
           user.getId(),
           invoice.getId(),
           System.currentTimeMillis(),
           orderRequest,
-          OrderStatus.PAYMENT_REQUIRED,
+          OrderStatusV1.PAYMENT_REQUIRED,
           null
       );
       orderDataSource().create(order);
@@ -93,16 +93,16 @@ public class OrderController extends Controller {
     return GsonUtils.toJson(invoice);
   }
 
-  private OrderDataSource orderDataSource() {
-    return this.connection.get().access(OrderDataSource.class);
+  private OrderDataSourceV1 orderDataSource() {
+    return this.connection.get().access(OrderDataSourceV1.class);
   }
 
-  private InvoiceDataSource invoiceDataSource() {
-    return this.connection.get().access(InvoiceDataSource.class);
+  private InvoiceDataSourceV1 invoiceDataSource() {
+    return this.connection.get().access(InvoiceDataSourceV1.class);
   }
 
-  private InvoiceFileDataSource invoiceFileDataSource() {
-    return this.connection.get().access(InvoiceFileDataSource.class);
+  private InvoiceFileDataSourceV1 invoiceFileDataSource() {
+    return this.connection.get().access(InvoiceFileDataSourceV1.class);
   }
 
 }

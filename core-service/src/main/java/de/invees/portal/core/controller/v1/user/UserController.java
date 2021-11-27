@@ -3,14 +3,14 @@ package de.invees.portal.core.controller.v1.user;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
+import de.invees.portal.common.datasource.mongodb.v1.UserAuthenticationDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.exception.UserCreationException;
-import de.invees.portal.common.model.v1.user.User;
-import de.invees.portal.common.model.v1.user.UserAuthentication;
-import de.invees.portal.common.model.v1.user.UserAuthenticationType;
-import de.invees.portal.common.model.v1.user.UserDetails;
+import de.invees.portal.common.model.v1.user.UserV1;
+import de.invees.portal.common.model.v1.user.UserAuthenticationV1;
+import de.invees.portal.common.model.v1.user.UserAuthenticationTypeV1;
+import de.invees.portal.common.model.v1.user.UserDetailsV1;
 import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
@@ -56,7 +56,7 @@ public class UserController {
       throw new UserCreationException("PASSWORD_REQUIRED");
     }
 
-    UserDetails user = GsonUtils.GSON.fromJson(body.get("user"), UserDetails.class);
+    UserDetailsV1 user = GsonUtils.GSON.fromJson(body.get("user"), UserDetailsV1.class);
     if (InputUtils.isEmpty(user.getName())) {
       throw new UserCreationException("MISSING_USER_NAME");
     }
@@ -84,10 +84,10 @@ public class UserController {
     String salt = SecurityUtils.generateSalt(40);
 
     userDataSource().createDisplayUser(user);
-    userAuthenticationDataSource().create(new UserAuthentication(
+    userAuthenticationDataSource().create(new UserAuthenticationV1(
         UUID.randomUUID(),
         user.getId(),
-        UserAuthenticationType.PASSWORD,
+        UserAuthenticationTypeV1.PASSWORD,
         Map.of(
             "password", SecurityUtils.hash(password, salt, user.getId()),
             "salt", salt
@@ -108,25 +108,25 @@ public class UserController {
 
     String email = body.get("email").getAsString();
     String password = body.get("password").getAsString();
-    User user = userDataSource().byEmail(email, User.class);
+    UserV1 user = userDataSource().byEmail(email, UserV1.class);
     if (user == null) {
       throw new UnauthorizedException("INVALID_USER_PASSWORD");
     }
 
-    List<UserAuthentication> authentications = userAuthenticationDataSource().byUser(
+    List<UserAuthenticationV1> authentications = userAuthenticationDataSource().byUser(
         user.getId(),
-        UserAuthenticationType.PASSWORD,
-        UserAuthentication.class
+        UserAuthenticationTypeV1.PASSWORD,
+        UserAuthenticationV1.class
     );
-    for (UserAuthentication authentication : authentications) {
+    for (UserAuthenticationV1 authentication : authentications) {
       String hashedPassword = SecurityUtils.hash(password, (String) authentication.getData().get("salt"), user.getId());
       if (authentication.getData().get("password").equals(hashedPassword)) {
         String token = TokenUtils.nextToken();
         long expiryTime = System.currentTimeMillis() + (1000 * 60 * 60 * 24);
-        UserAuthentication tokenAuthentication = new UserAuthentication(
+        UserAuthenticationV1 tokenAuthentication = new UserAuthenticationV1(
             UUID.randomUUID(),
             user.getId(),
-            UserAuthenticationType.TOKEN,
+            UserAuthenticationTypeV1.TOKEN,
             Map.of(
                 "token", token,
                 "address", req.ip(),
@@ -140,11 +140,11 @@ public class UserController {
     throw new UnauthorizedException("INVALID_USER_PASSWORD");
   }
 
-  private UserDataSource userDataSource() {
-    return connection.get().access(UserDataSource.class);
+  private UserDataSourceV1 userDataSource() {
+    return connection.get().access(UserDataSourceV1.class);
   }
 
-  private UserAuthenticationDataSource userAuthenticationDataSource() {
-    return connection.get().access(UserAuthenticationDataSource.class);
+  private UserAuthenticationDataSourceV1 userAuthenticationDataSource() {
+    return connection.get().access(UserAuthenticationDataSourceV1.class);
   }
 }

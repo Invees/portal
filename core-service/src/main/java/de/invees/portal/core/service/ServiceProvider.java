@@ -1,7 +1,7 @@
 package de.invees.portal.core.service;
 
-import de.invees.portal.common.model.v1.service.console.ServiceConsole;
-import de.invees.portal.common.model.v1.service.status.ServiceStatus;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.status.CreateConsoleMessage;
@@ -15,23 +15,23 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ServiceProvider implements Provider {
 
-  private final Map<UUID, ServiceStatus> statusMap = new HashMap<>();
-  private final Map<UUID, ServiceConsole> waitingConsole = new HashMap<>();
+  private final Map<UUID, ServiceStatusV1> statusMap = new HashMap<>();
+  private final Map<UUID, ServiceConsoleV1> waitingConsole = new HashMap<>();
   private final NatsProvider natsProvider;
 
-  public void apply(ServiceStatus status) {
+  public void apply(ServiceStatusV1 status) {
     statusMap.put(status.getService(), status);
   }
 
-  public ServiceStatus getStatus(UUID service) {
+  public ServiceStatusV1 getStatus(UUID service) {
     return statusMap.get(service);
   }
 
-  public void resolveConsole(UUID requestId, ServiceConsole console) {
+  public void resolveConsole(UUID requestId, ServiceConsoleV1 console) {
     this.waitingConsole.put(requestId, console);
   }
 
-  public ServiceConsole createConsole(UUID service) {
+  public ServiceConsoleV1 createConsole(UUID service) {
     UUID requestId = UUID.randomUUID();
     natsProvider.send(Subject.STATUS, new CreateConsoleMessage(requestId, service));
     long iterations = 0;

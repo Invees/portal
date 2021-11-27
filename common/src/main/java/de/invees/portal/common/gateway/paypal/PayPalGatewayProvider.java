@@ -5,7 +5,7 @@ import com.paypal.core.PayPalHttpClient;
 import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
 import de.invees.portal.common.configuration.PayPalConfiguration;
-import de.invees.portal.common.model.v1.invoice.Invoice;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.utils.provider.Provider;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class PayPalGatewayProvider implements Provider {
     return response;
   }
 
-  public HttpResponse<Order> createOrder(Invoice invoice) throws IOException {
+  public HttpResponse<Order> createOrder(InvoiceV1 invoice) throws IOException {
     OrderRequest orderRequest = new OrderRequest();
     orderRequest.checkoutPaymentIntent("CAPTURE");
 

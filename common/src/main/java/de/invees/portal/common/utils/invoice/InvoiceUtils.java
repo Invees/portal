@@ -2,22 +2,22 @@ package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.ProductDataSource;
-import de.invees.portal.common.datasource.mongodb.SectionDataSource;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
+import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.SectionDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.CalculationException;
-import de.invees.portal.common.model.v1.Display;
-import de.invees.portal.common.model.v1.invoice.Invoice;
-import de.invees.portal.common.model.v1.invoice.InvoicePosition;
-import de.invees.portal.common.model.v1.invoice.InvoiceStatus;
-import de.invees.portal.common.model.v1.order.request.OrderRequest;
-import de.invees.portal.common.model.v1.invoice.price.InvoicePrice;
-import de.invees.portal.common.model.v1.product.Product;
-import de.invees.portal.common.model.v1.product.price.OneOffProductPrice;
-import de.invees.portal.common.model.v1.section.Section;
-import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntry;
-import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryOption;
-import de.invees.portal.common.model.v1.user.User;
+import de.invees.portal.common.model.v1.DisplayV1;
+import de.invees.portal.common.model.v1.invoice.InvoicePositionV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.model.v1.invoice.price.InvoicePriceV1;
+import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
+import de.invees.portal.common.model.v1.product.ProductV1;
+import de.invees.portal.common.model.v1.product.price.OneOffProductPriceV1;
+import de.invees.portal.common.model.v1.section.SectionV1;
+import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryOptionV1;
+import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryV1;
+import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.common.utils.template.TemplateUtils;
 
@@ -34,31 +34,31 @@ public class InvoiceUtils {
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 
-  public static Invoice calculate(long id, UUID userId, List<OrderRequest> requests) {
-    List<InvoicePosition> positions = new ArrayList<>();
+  public static InvoiceV1 calculate(long id, UUID userId, List<OrderRequestV1> requests) {
+    List<InvoicePositionV1> positions = new ArrayList<>();
     double price = 0;
-    for (OrderRequest orderRequest : requests) {
+    for (OrderRequestV1 orderRequest : requests) {
       price += calculateOrderRequest(orderRequest, positions);
     }
 
-    return new Invoice(
+    return new InvoiceV1(
         id,
         userId,
         new ArrayList<>(),
-        new InvoicePrice(
+        new InvoicePriceV1(
             round(price) - taxes(round(price), 19),
             round(price),
             taxes(round(price), 19)
         ),
         System.currentTimeMillis(),
         positions,
-        InvoiceStatus.UNPAID
+        InvoiceStatusV1.UNPAID
     );
   }
 
-  private static double calculateOrderRequest(OrderRequest orderRequest, List<InvoicePosition> positions) {
-    Product product = product(orderRequest.getProduct());
-    Section section = section(product.getSection());
+  private static double calculateOrderRequest(OrderRequestV1 orderRequest, List<InvoicePositionV1> positions) {
+    ProductV1 product = product(orderRequest.getProduct());
+    SectionV1 section = section(product.getSection());
     if (!product.isActive() || !section.isActive()) {
       throw new CalculationException("PRODUCT_INACTIVE");
     }
@@ -66,7 +66,7 @@ public class InvoiceUtils {
 
     for (String key : orderRequest.getConfiguration().keySet()) {
       boolean found = false;
-      for (SectionConfigurationEntry entry : section.getConfigurationList()) {
+      for (SectionConfigurationEntryV1 entry : section.getConfigurationList()) {
         if (entry.getKey().equals(key)) {
           found = true;
           break;
@@ -78,8 +78,8 @@ public class InvoiceUtils {
     }
     for (Map.Entry<String, Object> entry : orderRequest.getConfiguration().entrySet()) {
       boolean found = false;
-      SectionConfigurationEntry configurationEntry = getConfigurationEntry(section, entry.getKey());
-      for (SectionConfigurationEntryOption option : configurationEntry.getOptionList()) {
+      SectionConfigurationEntryV1 configurationEntry = getConfigurationEntry(section, entry.getKey());
+      for (SectionConfigurationEntryOptionV1 option : configurationEntry.getOptionList()) {
         if (option.getValue().equals(entry.getValue())) {
           found = true;
           break;
@@ -90,9 +90,9 @@ public class InvoiceUtils {
       }
     }
 
-    List<InvoicePosition> subPositions = new ArrayList<>();
+    List<InvoicePositionV1> subPositions = new ArrayList<>();
     for (Map.Entry<String, Object> entry : orderRequest.getConfiguration().entrySet()) {
-      subPositions.add(new InvoicePosition(
+      subPositions.add(new InvoicePositionV1(
           getConfigurationEntry(section, entry.getKey()).getDisplayName(),
           getEntryOption(section, entry.getKey(), entry.getValue()).getDisplayValue(),
           entry.getValue(),
@@ -105,14 +105,14 @@ public class InvoiceUtils {
       price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice();
     }
 
-    OneOffProductPrice oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
+    OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
     if (oneOffPrice.getAmount() != 0) {
-      subPositions.add(new InvoicePosition(
-          new Display(
+      subPositions.add(new InvoicePositionV1(
+          new DisplayV1(
               "Einrichtung",
               "Setup"
           ),
-          new Display(
+          new DisplayV1(
               "Einrichtung",
               "Setup"
           ),
@@ -126,12 +126,12 @@ public class InvoiceUtils {
     }
     price += oneOffPrice.getAmount();
     price += product.getPrice().getAmount();
-    positions.add(new InvoicePosition(
-        new Display(
+    positions.add(new InvoicePositionV1(
+        new DisplayV1(
             section.getDisplayName().getDe() + " " + product.getDisplayName().getDe(),
             section.getDisplayName().getEn() + " " + product.getDisplayName().getEn()
         ),
-        new Display(
+        new DisplayV1(
             section.getDisplayName().getDe() + " " + product.getDisplayName().getDe(),
             section.getDisplayName().getEn() + " " + product.getDisplayName().getEn()
         ),
@@ -145,8 +145,8 @@ public class InvoiceUtils {
     return price;
   }
 
-  private static OneOffProductPrice getOneOffPrice(Product product, int contractTerm) {
-    for (OneOffProductPrice oneOffPrice : product.getPrice().getOneOffList()) {
+  private static OneOffProductPriceV1 getOneOffPrice(ProductV1 product, int contractTerm) {
+    for (OneOffProductPriceV1 oneOffPrice : product.getPrice().getOneOffList()) {
       if (oneOffPrice.getContractTerm() == contractTerm) {
         return oneOffPrice;
       }
@@ -154,8 +154,8 @@ public class InvoiceUtils {
     return null;
   }
 
-  private static SectionConfigurationEntry getConfigurationEntry(Section section, String key) {
-    for (SectionConfigurationEntry entry : section.getConfigurationList()) {
+  private static SectionConfigurationEntryV1 getConfigurationEntry(SectionV1 section, String key) {
+    for (SectionConfigurationEntryV1 entry : section.getConfigurationList()) {
       if (entry.getKey().equals(key)) {
         return entry;
       }
@@ -163,8 +163,8 @@ public class InvoiceUtils {
     return null;
   }
 
-  private static SectionConfigurationEntryOption getEntryOption(Section section, String key, Object value) {
-    for (SectionConfigurationEntryOption option : getConfigurationEntry(section, key).getOptionList()) {
+  private static SectionConfigurationEntryOptionV1 getEntryOption(SectionV1 section, String key, Object value) {
+    for (SectionConfigurationEntryOptionV1 option : getConfigurationEntry(section, key).getOptionList()) {
       if (option.getValue().equals(value)) {
         return option;
       }
@@ -172,16 +172,16 @@ public class InvoiceUtils {
     return null;
   }
 
-  private static Section section(String id) {
+  private static SectionV1 section(String id) {
     return ProviderRegistry.access(DataSourceProvider.class)
-        .access(SectionDataSource.class)
-        .byId(id, Section.class);
+        .access(SectionDataSourceV1.class)
+        .byId(id, SectionV1.class);
   }
 
-  private static Product product(String id) {
+  private static ProductV1 product(String id) {
     return ProviderRegistry.access(DataSourceProvider.class)
-        .access(ProductDataSource.class)
-        .byId(id, Product.class);
+        .access(ProductDataSourceV1.class)
+        .byId(id, ProductV1.class);
   }
 
   public static double taxes(double amount, double percent) {
@@ -192,11 +192,11 @@ public class InvoiceUtils {
     return Math.round(price * 100.0) / 100.0;
   }
 
-  public static byte[] createInvoiceFile(Invoice invoice) {
+  public static byte[] createInvoiceFile(InvoiceV1 invoice) {
     try {
-      User user = ProviderRegistry.access(DataSourceProvider.class)
-          .access(UserDataSource.class)
-          .byId(invoice.getBelongsTo().toString(), User.class);
+      UserV1 user = ProviderRegistry.access(DataSourceProvider.class)
+          .access(UserDataSourceV1.class)
+          .byId(invoice.getBelongsTo().toString(), UserV1.class);
 
       ByteArrayOutputStream invoiceBytes = new ByteArrayOutputStream();
       String invoiceTemplate = TemplateUtils.loadTemplate("invoice/de/index.html");
@@ -239,10 +239,10 @@ public class InvoiceUtils {
     }
   }
 
-  public static List<String> generateExportablePositions(List<InvoicePosition> positions, String positionTemplate,
+  public static List<String> generateExportablePositions(List<InvoicePositionV1> positions, String positionTemplate,
                                                          AtomicInteger positionIndex) {
     List<String> exportablePositions = new ArrayList<>();
-    for (InvoicePosition position : positions) {
+    for (InvoicePositionV1 position : positions) {
       if (position.getPrice() != 0) {
         String months = "";
         if (!position.getKey().equalsIgnoreCase("ONE_OFF")) {

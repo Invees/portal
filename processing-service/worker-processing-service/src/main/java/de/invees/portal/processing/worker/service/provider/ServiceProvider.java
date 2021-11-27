@@ -1,25 +1,25 @@
 package de.invees.portal.processing.worker.service.provider;
 
-import de.invees.portal.common.model.v1.order.Order;
-import de.invees.portal.common.model.v1.service.command.Command;
-import de.invees.portal.common.model.v1.service.command.CommandResponse;
-import de.invees.portal.common.model.v1.service.console.ServiceConsole;
+import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.service.command.CommandV1;
+import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
 import de.invees.portal.common.utils.provider.Provider;
-import de.invees.portal.common.model.v1.service.status.ServiceStatus;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface ServiceProvider extends Provider {
 
-  void create(Order order);
+  void create(OrderV1 order);
 
-  CommandResponse execute(Command command);
+  CommandResponseV1 execute(CommandV1 command);
 
   double getUsage();
 
-  List<ServiceStatus> getAllServiceStatus();
+  List<ServiceStatusV1> getAllServiceStatus();
 
-  ServiceConsole createConsole(UUID service);
+  ServiceConsoleV1 createConsole(UUID service);
 
 }

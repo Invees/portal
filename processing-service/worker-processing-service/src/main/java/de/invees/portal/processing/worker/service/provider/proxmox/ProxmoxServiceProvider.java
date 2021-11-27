@@ -1,15 +1,15 @@
 package de.invees.portal.processing.worker.service.provider.proxmox;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.ProductDataSource;
-import de.invees.portal.common.model.v1.order.Order;
-import de.invees.portal.common.model.v1.order.request.OrderRequest;
-import de.invees.portal.common.model.v1.product.Product;
-import de.invees.portal.common.model.v1.service.command.Command;
-import de.invees.portal.common.model.v1.service.command.CommandResponse;
-import de.invees.portal.common.model.v1.service.command.ProxmoxAction;
-import de.invees.portal.common.model.v1.service.console.ServiceConsole;
-import de.invees.portal.common.model.v1.service.status.ServiceStatus;
+import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
+import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
+import de.invees.portal.common.model.v1.product.ProductV1;
+import de.invees.portal.common.model.v1.service.command.CommandV1;
+import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
+import de.invees.portal.common.model.v1.service.command.ProxmoxActionV1;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.ServiceCreatedMessage;
@@ -40,12 +40,12 @@ public class ProxmoxServiceProvider implements ServiceProvider {
   }
 
   @Override
-  public void create(Order order) {
+  public void create(OrderV1 order) {
     try {
       UUID serviceId = UUID.randomUUID();
 
-      OrderRequest request = order.getRequest();
-      Product product = productDataSource().byId(request.getProduct(), Product.class);
+      OrderRequestV1 request = order.getRequest();
+      ProductV1 product = productDataSource().byId(request.getProduct(), ProductV1.class);
       int storage = ((Number) product.getFieldList().get("cpu").getValue()).intValue();
       VirtualMachineCreate create = VirtualMachineCreate.builder()
           .vmid(pveClient.getNextId())
@@ -75,23 +75,23 @@ public class ProxmoxServiceProvider implements ServiceProvider {
   }
 
   @Override
-  public CommandResponse execute(Command command) {
+  public CommandResponseV1 execute(CommandV1 command) {
     if (pveClient.getMachine(command.getService()) == null) {
-      return new CommandResponse(command.getId(), false);
+      return new CommandResponseV1(command.getId(), false);
     }
-    if (command.getAction().equals(ProxmoxAction.START)) {
+    if (command.getAction().equals(ProxmoxActionV1.START)) {
       return execHandleStart(command);
     }
-    if (command.getAction().equals(ProxmoxAction.RESTART)) {
+    if (command.getAction().equals(ProxmoxActionV1.RESTART)) {
       return execHandleRestart(command);
     }
-    if (command.getAction().equals(ProxmoxAction.STOP)) {
+    if (command.getAction().equals(ProxmoxActionV1.STOP)) {
       return execHandleStop(command);
     }
-    if (command.getAction().equals(ProxmoxAction.KILL)) {
+    if (command.getAction().equals(ProxmoxActionV1.KILL)) {
       return execHandleKill(command);
     }
-    return new CommandResponse(command.getId(), false);
+    return new CommandResponseV1(command.getId(), false);
   }
 
   @Override
@@ -105,9 +105,9 @@ public class ProxmoxServiceProvider implements ServiceProvider {
   }
 
   @Override
-  public List<ServiceStatus> getAllServiceStatus() {
+  public List<ServiceStatusV1> getAllServiceStatus() {
     List<VirtualMachine> machines = pveClient.getVirtualMachines();
-    List<ServiceStatus> statuses = new ArrayList<>();
+    List<ServiceStatusV1> statuses = new ArrayList<>();
     for (VirtualMachine machine : machines) {
       UUID serviceId = null;
       try {
@@ -118,38 +118,38 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       if (serviceId == null) {
         continue;
       }
-      ServiceStatus status = pveClient.getStatus(serviceId);
+      ServiceStatusV1 status = pveClient.getStatus(serviceId);
       statuses.add(status);
     }
     return statuses;
   }
 
   @Override
-  public ServiceConsole createConsole(UUID service) {
+  public ServiceConsoleV1 createConsole(UUID service) {
     if (pveClient.getMachine(service) == null) {
       return null;
     }
     return pveClient.createConsole(service);
   }
 
-  private CommandResponse execHandleStart(Command command) {
+  private CommandResponseV1 execHandleStart(CommandV1 command) {
     pveClient.start(command.getService());
-    return new CommandResponse(command.getId(), true);
+    return new CommandResponseV1(command.getId(), true);
   }
 
-  private CommandResponse execHandleRestart(Command command) {
+  private CommandResponseV1 execHandleRestart(CommandV1 command) {
     pveClient.restart(command.getService());
-    return new CommandResponse(command.getId(), true);
+    return new CommandResponseV1(command.getId(), true);
   }
 
-  private CommandResponse execHandleStop(Command command) {
+  private CommandResponseV1 execHandleStop(CommandV1 command) {
     pveClient.stop(command.getService());
-    return new CommandResponse(command.getId(), true);
+    return new CommandResponseV1(command.getId(), true);
   }
 
-  private CommandResponse execHandleKill(Command command) {
+  private CommandResponseV1 execHandleKill(CommandV1 command) {
     pveClient.kill(command.getService());
-    return new CommandResponse(command.getId(), true);
+    return new CommandResponseV1(command.getId(), true);
   }
 
   private String storage() {
@@ -169,7 +169,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
     return bestStorage;
   }
 
-  private ProductDataSource productDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(ProductDataSource.class);
+  private ProductDataSourceV1 productDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ProductDataSourceV1.class);
   }
 }

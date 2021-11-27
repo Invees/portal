@@ -1,7 +1,7 @@
 package de.invees.portal.processing.worker.nats;
 
-import de.invees.portal.common.model.v1.service.ServiceType;
-import de.invees.portal.common.model.v1.worker.ProcessingWorker;
+import de.invees.portal.common.model.v1.service.ServiceTypeV1;
+import de.invees.portal.common.model.v1.worker.ProcessingWorkerV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
@@ -38,7 +38,7 @@ public class ProcessingMessageHandler implements MessageHandler {
   private void execHandle(MasterStartedMessage message) {
     Application.LOGGER.info("Found new master - Handshake!");
     natsProvider.send(Subject.PROCESSING, new HandshakeMessage(
-        new ProcessingWorker(application.getConfiguration().getId(), ServiceType.valueOf(application.getConfiguration().getServiceType()))
+        new ProcessingWorkerV1(application.getConfiguration().getId(), ServiceTypeV1.valueOf(application.getConfiguration().getServiceType()))
     ));
   }
 

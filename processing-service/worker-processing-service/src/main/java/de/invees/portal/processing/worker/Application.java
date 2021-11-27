@@ -1,8 +1,8 @@
 package de.invees.portal.processing.worker;
 
 import de.invees.portal.common.BasicApplication;
-import de.invees.portal.common.model.v1.service.ServiceType;
-import de.invees.portal.common.model.v1.worker.ProcessingWorker;
+import de.invees.portal.common.model.v1.service.ServiceTypeV1;
+import de.invees.portal.common.model.v1.worker.ProcessingWorkerV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.HandshakeMessage;
@@ -72,7 +72,7 @@ public class Application extends BasicApplication {
   }
 
   private void loadServiceProvider() {
-    if (ServiceType.valueOf(this.configuration.getServiceType()) == ServiceType.VIRTUAL_SERVER) {
+    if (ServiceTypeV1.valueOf(this.configuration.getServiceType()) == ServiceTypeV1.VIRTUAL_SERVER) {
       ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration);
       ProviderRegistry.register(ServiceProvider.class, provider);
       ProviderRegistry.register(ProxmoxServiceProvider.class, provider);
@@ -104,7 +104,7 @@ public class Application extends BasicApplication {
 
   public void executeHandshake() {
     natsProvider.send(Subject.PROCESSING, new HandshakeMessage(
-        new ProcessingWorker(configuration.getId(), ServiceType.valueOf(configuration.getServiceType()))
+        new ProcessingWorkerV1(configuration.getId(), ServiceTypeV1.valueOf(configuration.getServiceType()))
     ));
   }
 }

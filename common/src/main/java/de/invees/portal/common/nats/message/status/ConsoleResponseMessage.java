@@ -1,6 +1,6 @@
 package de.invees.portal.common.nats.message.status;
 
-import de.invees.portal.common.model.v1.service.console.ServiceConsole;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
 import de.invees.portal.common.nats.message.processing.Message;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +12,6 @@ import java.util.UUID;
 public class ConsoleResponseMessage implements Message {
 
   private UUID requestId;
-  private ServiceConsole console;
+  private ServiceConsoleV1 console;
 
 }

@@ -1,7 +1,7 @@
 import com.google.gson.annotations.SerializedName;
 import com.itextpdf.io.util.FileUtil;
-import de.invees.portal.common.model.v1.ApiInterfaceIgnore;
-import de.invees.portal.common.model.v1.Model;
+import de.invees.portal.common.model.ApiInterfaceIgnore;
+import de.invees.portal.common.model.Model;
 import org.reflections.Reflections;
 
 import java.io.BufferedWriter;

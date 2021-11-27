@@ -1,10 +1,10 @@
 package de.invees.portal.core.utils;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
-import de.invees.portal.common.datasource.mongodb.UserDataSource;
-import de.invees.portal.common.model.v1.user.User;
-import de.invees.portal.common.model.v1.user.UserAuthentication;
+import de.invees.portal.common.datasource.mongodb.v1.UserAuthenticationDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
+import de.invees.portal.common.model.v1.user.UserV1;
+import de.invees.portal.common.model.v1.user.UserAuthenticationV1;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import spark.Request;
 
@@ -25,7 +25,7 @@ public class TokenUtils {
     return new String(BUF);
   }
 
-  public static User parseToken(Request request) {
+  public static UserV1 parseToken(Request request) {
     String token = request.headers("Authorization");
     if (token == null || token.equalsIgnoreCase("") || token.equalsIgnoreCase("null")) {
       return null;
@@ -34,9 +34,9 @@ public class TokenUtils {
     if (parsedToken == null || parsedToken.equalsIgnoreCase("") || token.equalsIgnoreCase("null")) {
       return null;
     }
-    UserAuthentication authentication = userAuthenticationDataSource().getAuthentication(
+    UserAuthenticationV1 authentication = userAuthenticationDataSource().getAuthentication(
         parsedToken,
-        UserAuthentication.class
+        UserAuthenticationV1.class
     );
     if (authentication == null) {
       return null;
@@ -44,14 +44,14 @@ public class TokenUtils {
     if (!authentication.getData().get("address").equals(request.ip())) {
       return null;
     }
-    return userDataSource().byId(authentication.getUser().toString(), User.class);
+    return userDataSource().byId(authentication.getUser().toString(), UserV1.class);
   }
 
-  private static UserDataSource userDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(UserDataSource.class);
+  private static UserDataSourceV1 userDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(UserDataSourceV1.class);
   }
 
-  private static UserAuthenticationDataSource userAuthenticationDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(UserAuthenticationDataSource.class);
+  private static UserAuthenticationDataSourceV1 userAuthenticationDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(UserAuthenticationDataSourceV1.class);
   }
 }

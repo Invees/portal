@@ -1,15 +1,15 @@
 package de.invees.portal.core.utils.controller;
 
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.datasource.mongodb.InvoiceDataSource;
-import de.invees.portal.common.datasource.mongodb.OrderDataSource;
-import de.invees.portal.common.datasource.mongodb.ServiceDataSource;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.exception.InputException;
-import de.invees.portal.common.model.v1.Model;
-import de.invees.portal.common.model.v1.invoice.Invoice;
-import de.invees.portal.common.model.v1.order.Order;
-import de.invees.portal.common.model.v1.service.Service;
-import de.invees.portal.common.model.v1.user.User;
+import de.invees.portal.common.model.Model;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.service.ServiceV1;
+import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.core.utils.TokenUtils;
 import org.bson.conversions.Bson;
@@ -40,21 +40,8 @@ public class Controller {
     return !InputUtils.isEmpty(req.queryParams("skip")) || !InputUtils.isEmpty(req.queryParams("limit"));
   }
 
-  public boolean isPermitted(Request req, String permissionType, String... contexts) {
-    User user = TokenUtils.parseToken(req);
-    if (user == null) {
-      return false;
-    }
-    for (String context : contexts) {
-      if (user.isPermitted(permissionType, context)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   public boolean isSameUser(Request req, UUID userId) {
-    User user = TokenUtils.parseToken(req);
+    UserV1 user = TokenUtils.parseToken(req);
     if (user == null) {
       return false;
     }
@@ -62,9 +49,9 @@ public class Controller {
   }
 
   // Order
-  public Order order(OrderDataSource dataSource, Request req) {
-    Order order = dataSource.byId(
-        UUID.fromString(req.params("order")), Order.class
+  public OrderV1 order(OrderDataSourceV1 dataSource, Request req) {
+    OrderV1 order = dataSource.byId(
+        UUID.fromString(req.params("order")), OrderV1.class
     );
     if (order == null) {
       throw new InputException("ORDER_NOT_FOUND");
@@ -73,9 +60,9 @@ public class Controller {
   }
 
   // Invoice
-  public Invoice invoice(InvoiceDataSource dataSource, Request req) {
-    Invoice invoice = dataSource.byId(
-        InputUtils.integerByString(req.params("invoice"), -1), Invoice.class
+  public InvoiceV1 invoice(InvoiceDataSourceV1 dataSource, Request req) {
+    InvoiceV1 invoice = dataSource.byId(
+        InputUtils.integerByString(req.params("invoice"), -1), InvoiceV1.class
     );
     if (invoice == null) {
       throw new InputException("INVOICE_NOT_FOUND");
@@ -84,9 +71,9 @@ public class Controller {
   }
 
   // Service
-  public Service service(ServiceDataSource dataSource, Request req) {
-    Service service = dataSource.byId(
-        UUID.fromString(req.params("service")), Service.class
+  public ServiceV1 service(ServiceDataSourceV1 dataSource, Request req) {
+    ServiceV1 service = dataSource.byId(
+        UUID.fromString(req.params("service")), ServiceV1.class
     );
     if (service == null) {
       throw new InputException("SERVICE__NOT_FOUND");

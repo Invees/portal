@@ -1,6 +1,6 @@
 package de.invees.portal.processing.worker.nats;
 
-import de.invees.portal.common.model.v1.service.console.ServiceConsole;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
@@ -33,7 +33,7 @@ public class StatusMessageHandler implements MessageHandler {
   }
 
   private void execHandle(CreateConsoleMessage message) {
-    ServiceConsole console = ProviderRegistry.access(ServiceProvider.class).createConsole(message.getServiceId());
+    ServiceConsoleV1 console = ProviderRegistry.access(ServiceProvider.class).createConsole(message.getServiceId());
     if (console != null) {
       natsProvider.send(Subject.STATUS, new ConsoleResponseMessage(message.getRequestId(), console));
     }

@@ -3,7 +3,7 @@ package de.invees.portal.common.datasource;
 import com.mongodb.*;
 import com.mongodb.client.MongoDatabase;
 import de.invees.portal.common.configuration.DataSourceConfiguration;
-import de.invees.portal.common.datasource.mongodb.*;
+import de.invees.portal.common.datasource.mongodb.v1.*;
 import de.invees.portal.common.utils.provider.Provider;
 import lombok.NonNull;
 import org.bson.codecs.BinaryCodec;
@@ -44,23 +44,23 @@ public class DataSourceProvider implements Provider {
     database = client.getDatabase(dataSource.getDatabase());
     database.runCommand(new BasicDBObject("ping", 1)); // ping
 
-    dataSourceMap.put(SectionDataSource.class, new SectionDataSource());
-    dataSourceMap.put(ProductDataSource.class, new ProductDataSource());
-    dataSourceMap.put(UserDataSource.class, new UserDataSource());
-    dataSourceMap.put(UserAuthenticationDataSource.class, new UserAuthenticationDataSource());
-    dataSourceMap.put(OrderDataSource.class, new OrderDataSource());
-    dataSourceMap.put(InvoiceDataSource.class, new InvoiceDataSource());
-    dataSourceMap.put(InvoiceFileDataSource.class, new InvoiceFileDataSource());
-    dataSourceMap.put(GatewayDataDataSource.class, new GatewayDataDataSource());
-    dataSourceMap.put(ServiceDataSource.class, new ServiceDataSource());
+    dataSourceMap.put(SectionDataSourceV1.class, new SectionDataSourceV1());
+    dataSourceMap.put(ProductDataSourceV1.class, new ProductDataSourceV1());
+    dataSourceMap.put(UserDataSourceV1.class, new UserDataSourceV1());
+    dataSourceMap.put(UserAuthenticationDataSourceV1.class, new UserAuthenticationDataSourceV1());
+    dataSourceMap.put(OrderDataSourceV1.class, new OrderDataSourceV1());
+    dataSourceMap.put(InvoiceDataSourceV1.class, new InvoiceDataSourceV1());
+    dataSourceMap.put(InvoiceFileDataSourceV1.class, new InvoiceFileDataSourceV1());
+    dataSourceMap.put(GatewayDataDataSourceV1.class, new GatewayDataDataSourceV1());
+    dataSourceMap.put(ServiceDataSourceV1.class, new ServiceDataSourceV1());
 
     dataSourceMap.forEach((k, d) -> d.init(
-        database.getCollection(k.getSimpleName().replace("DataSource", "")),
+        database.getCollection(d.getName().replace("DataSource", "")),
         database.getCollection("Sequence")
     ));
   }
 
-  public <T extends DataSource> T access(@NonNull Class<T> model) {
-    return (T) dataSourceMap.get(model);
+  public <T extends DataSource> T access(@NonNull Class<T> type) {
+    return (T) dataSourceMap.get(type);
   }
 }
