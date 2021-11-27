@@ -2,7 +2,7 @@ package de.invees.portal.common.datasource.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.service.Service;
+import de.invees.portal.common.model.v1.service.Service;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;

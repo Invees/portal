@@ -1,6 +1,6 @@
 package de.invees.portal.processing.worker.nats;
 
-import de.invees.portal.common.model.service.console.ServiceConsole;
+import de.invees.portal.common.model.v1.service.console.ServiceConsole;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;

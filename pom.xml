@@ -12,6 +12,8 @@
         <module>core-service</module>
         <module>common</module>
         <module>processing-service</module>
+        <module>event-service</module>
+        <module>interface-generator</module>
     </modules>
     <properties>
         <maven.compiler.source>16</maven.compiler.source>

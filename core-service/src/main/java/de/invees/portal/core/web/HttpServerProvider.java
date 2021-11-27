@@ -6,12 +6,12 @@ import de.invees.portal.common.exception.*;
 import de.invees.portal.common.utils.provider.Provider;
 import de.invees.portal.core.Application;
 import de.invees.portal.core.configuration.Configuration;
-import de.invees.portal.core.controller.invoice.InvoiceController;
-import de.invees.portal.core.controller.order.OrderController;
-import de.invees.portal.core.controller.product.ProductController;
-import de.invees.portal.core.controller.section.SectionController;
-import de.invees.portal.core.controller.service.ServiceController;
-import de.invees.portal.core.controller.user.UserController;
+import de.invees.portal.core.controller.v1.invoice.InvoiceController;
+import de.invees.portal.core.controller.v1.order.OrderController;
+import de.invees.portal.core.controller.v1.product.ProductController;
+import de.invees.portal.core.controller.v1.section.SectionController;
+import de.invees.portal.core.controller.v1.service.ServiceController;
+import de.invees.portal.core.controller.v1.user.UserController;
 
 import java.util.List;
 

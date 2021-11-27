@@ -1,7 +1,7 @@
 package de.invees.portal.core.service;
 
-import de.invees.portal.common.model.service.console.ServiceConsole;
-import de.invees.portal.common.model.service.status.ServiceStatus;
+import de.invees.portal.common.model.v1.service.console.ServiceConsole;
+import de.invees.portal.common.model.v1.service.status.ServiceStatus;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.status.CreateConsoleMessage;

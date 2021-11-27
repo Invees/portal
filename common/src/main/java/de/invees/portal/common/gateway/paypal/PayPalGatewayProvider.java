@@ -5,7 +5,7 @@ import com.paypal.core.PayPalHttpClient;
 import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
 import de.invees.portal.common.configuration.PayPalConfiguration;
-import de.invees.portal.common.model.invoice.Invoice;
+import de.invees.portal.common.model.v1.invoice.Invoice;
 import de.invees.portal.common.utils.provider.Provider;
 
 import java.io.IOException;

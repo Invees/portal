@@ -3,7 +3,7 @@ package de.invees.portal.common.datasource.mongodb;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.section.Section;
+import de.invees.portal.common.model.v1.section.Section;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;

@@ -2,10 +2,10 @@ package de.invees.portal.processing.master.worker;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.ProductDataSource;
-import de.invees.portal.common.model.order.Order;
-import de.invees.portal.common.model.product.Product;
-import de.invees.portal.common.model.service.ServiceType;
-import de.invees.portal.common.model.worker.ProcessingWorker;
+import de.invees.portal.common.model.v1.order.Order;
+import de.invees.portal.common.model.v1.product.Product;
+import de.invees.portal.common.model.v1.service.ServiceType;
+import de.invees.portal.common.model.v1.worker.ProcessingWorker;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.ExecuteOrderMessage;

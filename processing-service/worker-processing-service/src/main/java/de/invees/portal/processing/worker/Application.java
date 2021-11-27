@@ -1,8 +1,8 @@
 package de.invees.portal.processing.worker;
 
 import de.invees.portal.common.BasicApplication;
-import de.invees.portal.common.model.service.ServiceType;
-import de.invees.portal.common.model.worker.ProcessingWorker;
+import de.invees.portal.common.model.v1.service.ServiceType;
+import de.invees.portal.common.model.v1.worker.ProcessingWorker;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.HandshakeMessage;

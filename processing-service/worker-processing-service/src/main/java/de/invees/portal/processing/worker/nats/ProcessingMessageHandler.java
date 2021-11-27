@@ -1,7 +1,7 @@
 package de.invees.portal.processing.worker.nats;
 
-import de.invees.portal.common.model.service.ServiceType;
-import de.invees.portal.common.model.worker.ProcessingWorker;
+import de.invees.portal.common.model.v1.service.ServiceType;
+import de.invees.portal.common.model.v1.worker.ProcessingWorker;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;

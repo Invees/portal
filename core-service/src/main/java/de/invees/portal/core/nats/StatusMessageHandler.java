@@ -1,6 +1,6 @@
 package de.invees.portal.core.nats;
 
-import de.invees.portal.common.model.service.status.ServiceStatus;
+import de.invees.portal.common.model.v1.service.status.ServiceStatus;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.message.processing.Message;

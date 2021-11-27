@@ -3,6 +3,7 @@
 .project
 .settings/
 dependency-reduced-pom.xml
+model/
 
 # Intellij
 .idea/

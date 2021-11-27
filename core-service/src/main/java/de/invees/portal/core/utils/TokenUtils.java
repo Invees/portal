@@ -3,8 +3,8 @@ package de.invees.portal.core.utils;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.UserAuthenticationDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
-import de.invees.portal.common.model.user.User;
-import de.invees.portal.common.model.user.UserAuthentication;
+import de.invees.portal.common.model.v1.user.User;
+import de.invees.portal.common.model.v1.user.UserAuthentication;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import spark.Request;
 

@@ -9,7 +9,7 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import de.invees.portal.common.datasource.response.PagedResponse;
-import de.invees.portal.common.model.Model;
+import de.invees.portal.common.model.v1.Model;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;

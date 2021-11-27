@@ -6,18 +6,18 @@ import de.invees.portal.common.datasource.mongodb.ProductDataSource;
 import de.invees.portal.common.datasource.mongodb.SectionDataSource;
 import de.invees.portal.common.datasource.mongodb.UserDataSource;
 import de.invees.portal.common.exception.CalculationException;
-import de.invees.portal.common.model.Display;
-import de.invees.portal.common.model.invoice.Invoice;
-import de.invees.portal.common.model.invoice.InvoicePosition;
-import de.invees.portal.common.model.invoice.InvoiceStatus;
-import de.invees.portal.common.model.order.request.OrderRequest;
-import de.invees.portal.common.model.price.Price;
-import de.invees.portal.common.model.product.Product;
-import de.invees.portal.common.model.product.price.OneOffPrice;
-import de.invees.portal.common.model.section.Section;
-import de.invees.portal.common.model.section.configuration.SectionConfigurationEntry;
-import de.invees.portal.common.model.section.configuration.SectionConfigurationEntryOption;
-import de.invees.portal.common.model.user.User;
+import de.invees.portal.common.model.v1.Display;
+import de.invees.portal.common.model.v1.invoice.Invoice;
+import de.invees.portal.common.model.v1.invoice.InvoicePosition;
+import de.invees.portal.common.model.v1.invoice.InvoiceStatus;
+import de.invees.portal.common.model.v1.order.request.OrderRequest;
+import de.invees.portal.common.model.v1.invoice.price.InvoicePrice;
+import de.invees.portal.common.model.v1.product.Product;
+import de.invees.portal.common.model.v1.product.price.OneOffProductPrice;
+import de.invees.portal.common.model.v1.section.Section;
+import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntry;
+import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryOption;
+import de.invees.portal.common.model.v1.user.User;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.common.utils.template.TemplateUtils;
 
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class InvoiceUtils {
 
-  private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+  public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 
   public static Invoice calculate(long id, UUID userId, List<OrderRequest> requests) {
@@ -45,7 +45,7 @@ public class InvoiceUtils {
         id,
         userId,
         new ArrayList<>(),
-        new Price(
+        new InvoicePrice(
             round(price) - taxes(round(price), 19),
             round(price),
             taxes(round(price), 19)
@@ -105,7 +105,7 @@ public class InvoiceUtils {
       price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice();
     }
 
-    OneOffPrice oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
+    OneOffProductPrice oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
     if (oneOffPrice.getAmount() != 0) {
       subPositions.add(new InvoicePosition(
           new Display(
@@ -145,8 +145,8 @@ public class InvoiceUtils {
     return price;
   }
 
-  private static OneOffPrice getOneOffPrice(Product product, int contractTerm) {
-    for (OneOffPrice oneOffPrice : product.getPrice().getOneOffList()) {
+  private static OneOffProductPrice getOneOffPrice(Product product, int contractTerm) {
+    for (OneOffProductPrice oneOffPrice : product.getPrice().getOneOffList()) {
       if (oneOffPrice.getContractTerm() == contractTerm) {
         return oneOffPrice;
       }
