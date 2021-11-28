@@ -29,7 +29,7 @@ public class Application extends BasicApplication {
   }
 
   private Application() {
-    LOGGER.info("Starting Invees/Processing/Worker v" + VERSION);
+    LOGGER.info("Starting Invees/Portal/Processing/Worker v" + VERSION);
     if (!loadConfiguration()) {
       return;
     }

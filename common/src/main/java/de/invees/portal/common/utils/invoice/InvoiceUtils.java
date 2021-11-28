@@ -229,10 +229,6 @@ public class InvoiceUtils {
           exportableInvoice,
           invoiceBytes
       );
-      HtmlConverter.convertToPdf(
-          exportableInvoice,
-          new FileOutputStream(new File("test.pdf"))
-      );
       return invoiceBytes.toByteArray();
     } catch (Exception e) {
       throw new RuntimeException(e);

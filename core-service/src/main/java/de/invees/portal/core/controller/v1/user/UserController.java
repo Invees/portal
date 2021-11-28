@@ -15,7 +15,7 @@ import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.security.SecurityUtils;
-import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.CoreTokenUtils;
 import spark.Request;
 import spark.Response;
 
@@ -38,7 +38,7 @@ public class UserController {
 
   public Object localUser(Request req, Response resp) {
     return GsonUtils.GSON.toJson(
-        TokenUtils.parseToken(req)
+        CoreTokenUtils.parseToken(req)
     );
   }
 
@@ -121,7 +121,7 @@ public class UserController {
     for (UserAuthenticationV1 authentication : authentications) {
       String hashedPassword = SecurityUtils.hash(password, (String) authentication.getData().get("salt"), user.getId());
       if (authentication.getData().get("password").equals(hashedPassword)) {
-        String token = TokenUtils.nextToken();
+        String token = CoreTokenUtils.nextToken();
         long expiryTime = System.currentTimeMillis() + (1000 * 60 * 60 * 24);
         UserAuthenticationV1 tokenAuthentication = new UserAuthenticationV1(
             UUID.randomUUID(),

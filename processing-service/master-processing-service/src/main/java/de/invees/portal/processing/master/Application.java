@@ -22,7 +22,7 @@ public class Application extends BasicApplication {
   }
 
   private Application() {
-    LOGGER.info("Starting Invees/Processing/Master v" + VERSION);
+    LOGGER.info("Starting Invees/Portal/Processing/Master v" + VERSION);
     if (!loadConfiguration()) {
       return;
     }

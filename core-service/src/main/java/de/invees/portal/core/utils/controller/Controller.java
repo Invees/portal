@@ -11,7 +11,7 @@ import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.InputUtils;
-import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.CoreTokenUtils;
 import org.bson.conversions.Bson;
 import spark.Request;
 
@@ -41,7 +41,7 @@ public class Controller {
   }
 
   public boolean isSameUser(Request req, UUID userId) {
-    UserV1 user = TokenUtils.parseToken(req);
+    UserV1 user = CoreTokenUtils.parseToken(req);
     if (user == null) {
       return false;
     }

@@ -19,7 +19,7 @@ import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.service.ServiceProvider;
-import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
@@ -49,7 +49,7 @@ public class ServiceController extends Controller {
       throw new UnauthorizedException();
     }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    UserV1 user = TokenUtils.parseToken(req);
+    UserV1 user = CoreTokenUtils.parseToken(req);
     body.addProperty("_id", UUID.randomUUID().toString());
     body.addProperty("executor", user.getId().toString());
     body.addProperty("service", service.getId().toString());

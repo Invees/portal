@@ -17,7 +17,7 @@ import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
-import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
@@ -57,7 +57,7 @@ public class OrderController extends Controller {
   }
 
   public Object placeOrder(Request req, Response resp) {
-    UserV1 user = TokenUtils.parseToken(req);
+    UserV1 user = CoreTokenUtils.parseToken(req);
     if (user == null) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }

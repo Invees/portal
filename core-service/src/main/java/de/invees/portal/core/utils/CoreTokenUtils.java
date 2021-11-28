@@ -3,14 +3,15 @@ package de.invees.portal.core.utils;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.UserAuthenticationDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
-import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.model.v1.user.UserAuthenticationV1;
+import de.invees.portal.common.model.v1.user.UserV1;
+import de.invees.portal.common.utils.TokenUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import spark.Request;
 
 import java.security.SecureRandom;
 
-public class TokenUtils {
+public class CoreTokenUtils {
 
   public static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   public static final int SECURE_TOKEN_LENGTH = 512;
@@ -34,17 +35,7 @@ public class TokenUtils {
     if (parsedToken == null || parsedToken.equalsIgnoreCase("") || token.equalsIgnoreCase("null")) {
       return null;
     }
-    UserAuthenticationV1 authentication = userAuthenticationDataSource().getAuthentication(
-        parsedToken,
-        UserAuthenticationV1.class
-    );
-    if (authentication == null) {
-      return null;
-    }
-    if (!authentication.getData().get("address").equals(request.ip())) {
-      return null;
-    }
-    return userDataSource().byId(authentication.getUser().toString(), UserV1.class);
+    return TokenUtils.parseToken(parsedToken, request.ip());
   }
 
   private static UserDataSourceV1 userDataSource() {

@@ -26,7 +26,7 @@ import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.Application;
-import de.invees.portal.core.utils.TokenUtils;
+import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
@@ -62,7 +62,7 @@ public class InvoiceController extends Controller {
       Application.LOGGER.error("------------------------------------");
       Application.LOGGER.error("Invalid invoice for payment. Did the user tryed to do some illegal stuff?");
       Application.LOGGER.error("orderResponse = " + GsonUtils.toJson(orderResponse));
-      Application.LOGGER.error("user = " + GsonUtils.toJson(TokenUtils.parseToken(req)));
+      Application.LOGGER.error("user = " + GsonUtils.toJson(CoreTokenUtils.parseToken(req)));
       Application.LOGGER.error("invoice = " + GsonUtils.toJson(invoice));
       Application.LOGGER.error("IP = " + req.ip());
       Application.LOGGER.error("------------------------------------");
