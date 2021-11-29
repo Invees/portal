@@ -125,7 +125,7 @@ public class PveClient {
         configuration,
         ServiceStatusTypeV1.valueOf(data.get("status").getAsString().toUpperCase()),
         null,
-        data.get("uptime").getAsLong()
+        data.get("uptime").getAsLong() * 1000
     );
   }
 

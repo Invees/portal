@@ -17,8 +17,10 @@ public class TokenUtils {
     if (authentication == null) {
       return null;
     }
-    if (!authentication.getData().get("address").equals(address)) {
-      return null;
+    if (address != null) {
+      if (!authentication.getData().get("address").equals(address)) {
+        return null;
+      }
     }
     return userDataSource().byId(authentication.getUser().toString(), UserV1.class);
   }

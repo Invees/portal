@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+<Appenders>
+    <RollingFile name="application" fileName="logs/master.log"
+                 filePattern="logs/master-%d{yyyy-MM-dd}-%i.log" >
+        <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] %msg%n" />
+        <Policies>
+            <SizeBasedTriggeringPolicy size="19500KB" />
+        </Policies>
+        <DefaultRolloverStrategy max="1"/>
+    </RollingFile>
+    <RollingFile name="mongodbLog" fileName="logs/mongodb.log"
+                 filePattern="logs/mongodb-%d{yyyy-MM-dd}-%i.log" >
+        <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] %msg%n" />
+        <Policies>
+            <SizeBasedTriggeringPolicy size="19500KB" />
+        </Policies>
+        <DefaultRolloverStrategy max="1"/>
+    </RollingFile>
+    <RollingFile name="jettyLog" fileName="logs/jetty.log"
+                 filePattern="logs/jetty-%d{yyyy-MM-dd}-%i.log" >
+        <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level] %msg%n" />
+        <Policies>
+            <SizeBasedTriggeringPolicy size="19500KB" />
+        </Policies>
+        <DefaultRolloverStrategy max="1"/>
+    </RollingFile>
+</Appenders>
+<Loggers>
+    <Logger name="application" level="DEBUG" additivity="true">
+        <AppenderRef ref="application" />
+    </Logger>
+    <Logger name="org.mongodb.driver.cluster" level="DEBUG" additivity="true">
+        <AppenderRef ref="mongodbLog" />
+    </Logger>
+    <Logger name="org.eclipse.jetty.server.Server" level="DEBUG" additivity="true">
+        <AppenderRef ref="jettyLog" />
+    </Logger>
+    <Logger name="org.eclipse.jetty.server.AbstractConnector" level="DEBUG" additivity="true">
+        <AppenderRef ref="jettyLog" />
+    </Logger>
+</Loggers>
+</Configuration>
