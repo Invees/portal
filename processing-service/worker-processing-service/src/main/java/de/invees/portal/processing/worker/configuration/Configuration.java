@@ -11,6 +11,9 @@ public class Configuration {
 
   private final UUID id;
   private final String serviceType;
+  private final String nfsStorage;
+  private final String nfsDirectory;
+  private final String diskPrefix;
   private final DataSourceConfiguration dataSource;
   private final NatsConfiguration nats;
   private final ProxmoxConfiguration proxmox;

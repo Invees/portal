@@ -43,6 +43,7 @@ public class PveClient {
     public static final String SPICE = "{%url%}/api2/json/nodes/%0$s/qemu/%1$s/spiceproxy";
     public static final String TASKS = "{%url%}/api2/json/nodes/%0$s/tasks?vmid=%1$s&source=active";
     public static final String TASK = "{%url%}/api2/json/nodes/%0$s/tasks/%1$s";
+    public static final String CONFIG = "{%url%}/api2/json/nodes/%0$s/qemu/%1$s/config";
   }
 
   private final ProxmoxConfiguration configuration;
@@ -127,6 +128,14 @@ public class PveClient {
         null,
         data.get("uptime").getAsLong() * 1000
     );
+  }
+
+  public void mount(UUID service, String iso) {
+    killActiveTask(service);
+    System.out.println(put(
+        URI.create(parse(URL.CONFIG, configuration.getNode(), getMachine(service).getVmid() + "")),
+        body("cdrom", iso)
+    ).getAsJsonObject());
   }
 
   public void start(UUID service) {
@@ -229,6 +238,22 @@ public class PveClient {
       HttpRequest request = HttpRequest.newBuilder()
           .uri(uri)
           .POST(HttpRequest.BodyPublishers.ofString(body))
+          .header("Cookie", "PVEAuthCookie=" + cookie)
+          .header("CSRFPreventionToken", csrfToken)
+          .header("Content-Type", "application/json")
+          .build();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      return JsonParser.parseString(response.body()).getAsJsonObject();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private JsonObject put(URI uri, String body) {
+    try {
+      HttpRequest request = HttpRequest.newBuilder()
+          .uri(uri)
+          .PUT(HttpRequest.BodyPublishers.ofString(body))
           .header("Cookie", "PVEAuthCookie=" + cookie)
           .header("CSRFPreventionToken", csrfToken)
           .header("Content-Type", "application/json")

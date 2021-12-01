@@ -2,12 +2,14 @@ package de.invees.portal.common.model.v1.service.command;
 
 import com.google.gson.annotations.SerializedName;
 import de.invees.portal.common.model.Model;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.Map;
 import java.util.UUID;
 
 @Data
+@AllArgsConstructor
 public class CommandV1 implements Model {
 
   @SerializedName("_id")

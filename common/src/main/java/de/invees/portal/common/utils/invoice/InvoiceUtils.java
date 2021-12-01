@@ -22,8 +22,6 @@ import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.common.utils.template.TemplateUtils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;

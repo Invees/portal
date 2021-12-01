@@ -3,7 +3,6 @@ package de.invees.portal.core.utils;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.UserAuthenticationDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
-import de.invees.portal.common.model.v1.user.UserAuthenticationV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.TokenUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;

@@ -29,13 +29,16 @@ public class ConfigurationLoader {
           || field.getType() == List.class) {
         String prefix = "";
         if (!parent.isEmpty()) {
-          prefix = parent + ".";
+          prefix = parent + "_";
         }
-        String data = System.getenv(prefix + field.getName());
+        String data = System.getProperty(prefix + field.getName());
+        if (data == null) {
+          data = System.getenv(prefix + field.getName());
+        }
         if (data == null) {
           throw new IllegalArgumentException("Missing configuration entry for: " + prefix + field.getName());
         }
-        if (data.contains(":") || data.contains("//")) {
+        if (data.contains(":") || data.contains("/")) {
           data = "\"" + data + "\"";
         }
         if (data != null) {

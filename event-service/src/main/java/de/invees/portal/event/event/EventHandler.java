@@ -89,7 +89,6 @@ public class EventHandler extends WebSocketAdapter {
 
   @Override
   public void onWebSocketError(Throwable cause) {
-
   }
 
   public void addSubscription(String event) {

@@ -7,11 +7,14 @@ import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.InputException;
+import de.invees.portal.common.exception.LockedServiceException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
-import de.invees.portal.common.model.v1.user.UserV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusTypeV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.model.v1.user.UserNameDetailsV1;
+import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.status.ExecuteCommandMessage;
@@ -24,6 +27,8 @@ import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 import static spark.Spark.get;
@@ -48,6 +53,13 @@ public class ServiceController extends Controller {
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
+    ServiceStatusV1 status = serviceProvider().getStatus(service.getId());
+    if (status == null) {
+      throw new LockedServiceException("UNAVAILABLE_HOST");
+    }
+    if (status.getStatus() == ServiceStatusTypeV1.INSTALLING) {
+      throw new LockedServiceException("INSTALLING");
+    }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     UserV1 user = CoreTokenUtils.parseToken(req);
     body.addProperty("_id", UUID.randomUUID().toString());
@@ -66,7 +78,16 @@ public class ServiceController extends Controller {
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
-    System.out.println("DO!");
+    ServiceStatusV1 status = serviceProvider().getStatus(service.getId());
+    if (status == null) {
+      throw new LockedServiceException("UNAVAILABLE_HOST");
+    }
+    if (status.getStatus() == ServiceStatusTypeV1.INSTALLING) {
+      throw new LockedServiceException("INSTALLING");
+    }
+    if (status.getStatus() == ServiceStatusTypeV1.STOPPED) {
+      throw new LockedServiceException("STOPPED");
+    }
     return GsonUtils.GSON.toJson(
         serviceProvider().createConsole(service.getId())
     );
@@ -87,6 +108,16 @@ public class ServiceController extends Controller {
     ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
+    }
+    ServiceStatusV1 status = serviceProvider().getStatus(service.getId());
+    if (status == null) {
+      return GsonUtils.GSON.toJson(new ServiceStatusV1(
+          service.getId(),
+          new HashMap<>(),
+          ServiceStatusTypeV1.UNAVAILABLE_HOST,
+          new ArrayList<>(),
+          0
+      ));
     }
     return GsonUtils.GSON.toJson(
         serviceProvider().getStatus(service.getId())

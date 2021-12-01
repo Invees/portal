@@ -6,5 +6,7 @@ public class ProxmoxActionV1 {
   public static final String STOP = "STOP";
   public static final String RESTART = "RESTART";
   public static final String KILL = "KILL";
+  public static final String INSTALL = "INSTALL";
+  public static final String MOUNT = "MOUNT";
 
 }
