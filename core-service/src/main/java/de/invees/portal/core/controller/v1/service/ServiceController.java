@@ -6,7 +6,6 @@ import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
-import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.LockedServiceException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.service.ServiceV1;
@@ -135,23 +134,16 @@ public class ServiceController extends Controller {
   }
 
   public Object list(Request req, Response resp) {
-    if (req.queryParams("belongsTo") != null) {
-      return listForUser(req, resp);
-    }
-    throw new InputException("MISSING_ARGUMENT");
-  }
-
-  private Object listForUser(Request req, Response resp) {
-    UUID user = UUID.fromString(req.queryParams("belongsTo"));
-    if (!isSameUser(req, user)) {
-      throw new UnauthorizedException("UNAUTHORIZED");
+    UserV1 user = CoreTokenUtils.parseToken(req);
+    if (user == null) {
+      throw new UnauthorizedException();
     }
     return GsonUtils.GSON.toJson(
         list(
             serviceDataSource(),
             req,
             ServiceV1.class,
-            Filters.eq(ServiceV1.BELONGS_TO, user.toString())
+            Filters.eq(ServiceV1.BELONGS_TO, user.getId().toString())
         )
     );
   }

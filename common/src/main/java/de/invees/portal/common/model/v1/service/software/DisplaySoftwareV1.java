@@ -1,7 +1,6 @@
 package de.invees.portal.common.model.v1.service.software;
 
 import com.google.gson.annotations.SerializedName;
-import de.invees.portal.common.model.ApiInterfaceIgnore;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.v1.service.ServiceTypeV1;
 import lombok.AllArgsConstructor;
@@ -11,27 +10,22 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-@ApiInterfaceIgnore
-public class ServiceSoftwareV1 implements Model {
-
-  public static String ID = "_id";
-  public static String NAME = "name";
-  public static String INTERNAL_NAME = "internalName";
-  public static String SERVICE_TYPE = "serviceType";
-  public static String TYPE = "type";
-  public static String BELONGS_TO = "belongsTo";
+public class DisplaySoftwareV1 implements Model {
 
   @SerializedName("_id")
   private UUID id;
   private String name;
-  private String internalName;
+  private UUID belongsTo;
   private ServiceTypeV1 serviceType;
   private ServiceSoftwareTypeV1 type;
-  private UUID belongsTo;
 
   public static String[] projection() {
     return new String[]{
-        ID, NAME, INTERNAL_NAME, SERVICE_TYPE, TYPE, BELONGS_TO
+        ServiceSoftwareV1.ID,
+        ServiceSoftwareV1.NAME,
+        ServiceSoftwareV1.BELONGS_TO,
+        ServiceSoftwareV1.SERVICE_TYPE,
+        ServiceSoftwareV1.TYPE
     };
   }
 }
