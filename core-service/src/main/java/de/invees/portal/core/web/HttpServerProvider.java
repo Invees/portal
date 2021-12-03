@@ -73,6 +73,7 @@ public class HttpServerProvider implements Provider {
     exception(UserCreationException.class, (ex, request, response) -> response.body(ex.json().toString()));
     exception(UnauthorizedException.class, (ex, request, response) -> response.body(ex.json().toString()));
     exception(InputException.class, (ex, request, response) -> response.body(ex.json().toString()));
+    exception(MissingWorkerException.class, (ex, request, response) -> response.body(ex.json().toString()));
 
     exception(Exception.class, (ex, request, response) -> {
       JsonObject body = new JsonObject();

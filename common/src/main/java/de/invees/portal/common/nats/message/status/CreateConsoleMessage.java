@@ -1,6 +1,6 @@
 package de.invees.portal.common.nats.message.status;
 
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

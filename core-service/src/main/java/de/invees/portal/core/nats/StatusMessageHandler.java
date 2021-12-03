@@ -3,7 +3,8 @@ package de.invees.portal.core.nats;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
+import de.invees.portal.common.nats.message.status.CommandResponseMessage;
 import de.invees.portal.common.nats.message.status.ConsoleResponseMessage;
 import de.invees.portal.common.nats.message.status.ServiceStatusMessage;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
@@ -23,6 +24,8 @@ public class StatusMessageHandler implements MessageHandler {
       execHandle((ServiceStatusMessage) message);
     } else if (message instanceof ConsoleResponseMessage) {
       execHandle((ConsoleResponseMessage) message);
+    } else if (message instanceof CommandResponseMessage) {
+      execHandle((CommandResponseMessage) message);
     }
   }
 
@@ -36,4 +39,7 @@ public class StatusMessageHandler implements MessageHandler {
     ProviderRegistry.access(ServiceProvider.class).resolveConsole(message.getRequestId(), message.getConsole());
   }
 
+  private void execHandle(CommandResponseMessage message) {
+    ProviderRegistry.access(ServiceProvider.class).resolveCommand(message.getRequestId(), message.getResponse());
+  }
 }

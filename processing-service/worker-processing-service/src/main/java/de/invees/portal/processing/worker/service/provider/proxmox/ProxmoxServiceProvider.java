@@ -2,17 +2,22 @@ package de.invees.portal.processing.worker.service.provider.proxmox;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.SoftwareDataSourceV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
+import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
 import de.invees.portal.common.model.v1.service.command.ProxmoxActionV1;
 import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
+import de.invees.portal.common.model.v1.service.software.ServiceSoftwareTypeV1;
+import de.invees.portal.common.model.v1.service.software.ServiceSoftwareV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusTypeV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.ServiceCreatedMessage;
+import de.invees.portal.common.utils.IOUtils;
 import de.invees.portal.common.utils.process.ProcessUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.worker.Application;
@@ -76,43 +81,50 @@ public class ProxmoxServiceProvider implements ServiceProvider {
   }
 
   @Override
-  public void execute(CommandV1 command) {
+  public CommandResponseV1 execute(CommandV1 command) {
+    if (pveClient.getMachine(command.getService()) == null) {
+      return null;
+    }
     if (overrideStatus.get(command.getService()) == ServiceStatusTypeV1.LOCKED) {
-      return;
+      return new CommandResponseV1(false, "LOCKED");
     }
     if (overrideStatus.get(command.getService()) == ServiceStatusTypeV1.INSTALLING) {
-      return;
-    }
-    if (pveClient.getMachine(command.getService()) == null) {
-      return;
+      return new CommandResponseV1(false, "INSTALLING");
     }
     if (command.getAction().equals(ProxmoxActionV1.START)) {
-      execHandleStart(command);
+      return execHandleStart(command);
     }
     if (command.getAction().equals(ProxmoxActionV1.RESTART)) {
-      execHandleRestart(command);
+      return execHandleRestart(command);
     }
     if (command.getAction().equals(ProxmoxActionV1.STOP)) {
-      execHandleStop(command);
+      return execHandleStop(command);
     }
     if (command.getAction().equals(ProxmoxActionV1.KILL)) {
-      execHandleKill(command);
+      return execHandleKill(command);
     }
     if (command.getAction().equals(ProxmoxActionV1.INSTALL)) {
-      executeHandleInstall(command);
+      return executeHandleInstall(command);
     }
     if (command.getAction().equals(ProxmoxActionV1.MOUNT)) {
-      executeMountIso(command);
+      return executeMountIso(command);
     }
+    return null;
   }
 
-  private void executeHandleInstall(CommandV1 command) {
+  private CommandResponseV1 executeHandleInstall(CommandV1 command) {
     String isoName = (String) command.getData().get("iso");
     String password = (String) command.getData().get("password");
     String hostname = (String) command.getData().get("hostname");
     if (isoName == null || password == null || hostname == null) {
-      return;
+      return new CommandResponseV1(false, "MISSING_ARGUMENT");
     }
+    ServiceSoftwareV1 software = softwareDataSource().byId(isoName, ServiceSoftwareV1.class);
+    if (software == null || software.getType() != ServiceSoftwareTypeV1.INSTALLATION) {
+      return new CommandResponseV1(false, "INSTALLATION_NOT_FOUND");
+    }
+    String isoId = software.getId().toString() + ".iso";
+
     new Thread(() -> {
       try {
         overrideStatus.put(command.getService(), ServiceStatusTypeV1.INSTALLING);
@@ -120,7 +132,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
         Thread.sleep(1000); // Wait for stop
         File iso = new File("tmp/" + UUID.randomUUID() + ".iso");
         File exportIso = new File("tmp/" + UUID.randomUUID() + ".iso");
-        Files.copy(new File(configuration.getNfsDirectory(), "/template/iso/" + isoName).toPath(), iso.toPath());
+        Files.copy(new File(configuration.getNfsDirectory(), "/template/iso/" + isoId).toPath(), iso.toPath());
         // Unpack the iso
         File isoFiles = new File("tmp/" + UUID.randomUUID());
         isoFiles.mkdirs();
@@ -168,29 +180,53 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
         // Wait until shutdown
         while (true) {
+          Thread.sleep(30000);
           if (pveClient.getStatus(command.getService()).getStatus() == ServiceStatusTypeV1.STOPPED) {
             break;
           }
-          Thread.sleep(30000);
         }
+
+        this.mount(command.getService(), "");
+
+        IOUtils.delete(iso);
+        IOUtils.delete(exportIso);
+        IOUtils.delete(nfsExport);
+        IOUtils.delete(isoFiles);
 
         overrideStatus.remove(command.getService());
       } catch (Exception e) {
         Application.LOGGER.error("", e);
       }
     }).start();
+    return new CommandResponseV1(true, "");
   }
 
-  private void executeMountIso(CommandV1 command) {
-    overrideStatus.put(command.getService(), ServiceStatusTypeV1.LOCKED);
+  private CommandResponseV1 executeMountIso(CommandV1 command) {
     String iso = (String) command.getData().get("iso");
-    mount(command.getService(), iso);
+    if (iso == null || iso.equalsIgnoreCase("none") || iso.equalsIgnoreCase("")) {
+      mount(command.getService(), "");
+      return new CommandResponseV1(true, "");
+    }
+    ServiceSoftwareV1 software = softwareDataSource().byId(iso, ServiceSoftwareV1.class);
+    if (software == null || software.getType() != ServiceSoftwareTypeV1.MOUNTABLE) {
+      return new CommandResponseV1(false, "MOUNTABLE_NOT_FOUND");
+    }
+    if (software.getBelongsTo() != null && !software.getBelongsTo().equals(command.getExecutor())) {
+      return new CommandResponseV1(false, "UNAUTHORIZED");
+    }
+    overrideStatus.put(command.getService(), ServiceStatusTypeV1.LOCKED);
+    mount(command.getService(), iso + ".iso");
     overrideStatus.remove(command.getService());
+    return new CommandResponseV1(true, "");
   }
 
   private void mount(UUID service, String isoName) {
     try {
-      pveClient.mount(service, configuration.getNfsStorage() + ":iso/" + isoName);
+      if (isoName.equals("none") || isoName.equals("") || isoName == null) {
+        pveClient.mount(service, "none,media=cdrom,size=378M");
+      } else {
+        pveClient.mount(service, configuration.getNfsStorage() + ":iso/" + isoName);
+      }
     } catch (Exception e) {
       Application.LOGGER.error("", e);
     }
@@ -221,6 +257,9 @@ public class ProxmoxServiceProvider implements ServiceProvider {
         continue;
       }
       ServiceStatusV1 status = pveClient.getStatus(serviceId);
+      if (overrideStatus.containsKey(serviceId)) {
+        status.setStatus(overrideStatus.get(serviceId));
+      }
       statuses.add(status);
     }
     return statuses;
@@ -231,23 +270,33 @@ public class ProxmoxServiceProvider implements ServiceProvider {
     if (pveClient.getMachine(service) == null) {
       return null;
     }
+    if (overrideStatus.get(service) == ServiceStatusTypeV1.LOCKED) {
+      return null;
+    }
+    if (overrideStatus.get(service) == ServiceStatusTypeV1.INSTALLING) {
+      return null;
+    }
     return pveClient.createConsole(service);
   }
 
-  private void execHandleStart(CommandV1 command) {
+  private CommandResponseV1 execHandleStart(CommandV1 command) {
     pveClient.start(command.getService());
+    return new CommandResponseV1(true, "");
   }
 
-  private void execHandleRestart(CommandV1 command) {
+  private CommandResponseV1 execHandleRestart(CommandV1 command) {
     pveClient.restart(command.getService());
+    return new CommandResponseV1(true, "");
   }
 
-  private void execHandleStop(CommandV1 command) {
+  private CommandResponseV1 execHandleStop(CommandV1 command) {
     pveClient.stop(command.getService());
+    return new CommandResponseV1(true, "");
   }
 
-  private void execHandleKill(CommandV1 command) {
+  private CommandResponseV1 execHandleKill(CommandV1 command) {
     pveClient.kill(command.getService());
+    return new CommandResponseV1(true, "");
   }
 
   private String storage() {
@@ -271,4 +320,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
     return ProviderRegistry.access(DataSourceProvider.class).access(ProductDataSourceV1.class);
   }
 
+  private SoftwareDataSourceV1 softwareDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(SoftwareDataSourceV1.class);
+  }
 }

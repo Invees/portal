@@ -5,6 +5,7 @@ import de.invees.portal.common.model.v1.worker.ProcessingWorkerV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
+import de.invees.portal.common.nats.message.Message;
 import de.invees.portal.common.nats.message.processing.*;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.worker.Application;

@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.invees.portal.common.BasicApplication;
 import de.invees.portal.common.configuration.NatsConfiguration;
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.Provider;
 import io.nats.client.Connection;

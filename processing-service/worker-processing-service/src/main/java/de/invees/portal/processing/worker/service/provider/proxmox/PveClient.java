@@ -4,10 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
 import de.invees.portal.common.model.v1.service.console.ServiceConsoleTypeV1;
-import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
+import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusTypeV1;
+import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.processing.worker.Application;
 import de.invees.portal.processing.worker.configuration.ProxmoxConfiguration;
@@ -116,11 +116,21 @@ public class PveClient {
         configuration.getNode(),
         getMachine(service).getVmid() + "")
     )).getAsJsonObject("data");
+    JsonObject config = get(
+        URI.create(parse(URL.CONFIG, configuration.getNode(), getMachine(service).getVmid() + ""))
+    ).getAsJsonObject("data");
 
     Map<String, Object> configuration = new HashMap<>();
     configuration.put("cpu", data.get("cpus").getAsInt());
     configuration.put("memory", data.get("maxmem").getAsDouble() / 1024d / 1024d);
     configuration.put("storage", data.get("maxdisk").getAsDouble() / 1024d / 1024d);
+
+    if (config.has("ide2") && !config.get("ide2").getAsString().contains("none")) {
+      configuration.put("cdrom", config.get("ide2").getAsString().split("/")[1].split(",")[0].replace(".iso", ""));
+    } else {
+      configuration.put("cdrom", null);
+    }
+
     return new ServiceStatusV1(
         service,
         configuration,
@@ -132,10 +142,10 @@ public class PveClient {
 
   public void mount(UUID service, String iso) {
     killActiveTask(service);
-    System.out.println(put(
+    put(
         URI.create(parse(URL.CONFIG, configuration.getNode(), getMachine(service).getVmid() + "")),
         body("cdrom", iso)
-    ).getAsJsonObject());
+    ).getAsJsonObject();
   }
 
   public void start(UUID service) {

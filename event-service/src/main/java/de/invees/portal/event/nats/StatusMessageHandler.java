@@ -6,7 +6,7 @@ import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.MessageHandler;
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
 import de.invees.portal.common.nats.message.status.ServiceStatusMessage;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;

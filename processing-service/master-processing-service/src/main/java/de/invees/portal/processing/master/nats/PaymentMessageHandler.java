@@ -8,7 +8,7 @@ import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.message.payment.PaymentMessage;
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.master.Application;
 import de.invees.portal.processing.master.worker.WorkerRegistryProvider;

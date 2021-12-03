@@ -1,10 +1,12 @@
 package de.invees.portal.processing.worker.nats;
 
+import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
+import de.invees.portal.common.nats.message.status.CommandResponseMessage;
 import de.invees.portal.common.nats.message.status.ConsoleResponseMessage;
 import de.invees.portal.common.nats.message.status.CreateConsoleMessage;
 import de.invees.portal.common.nats.message.status.ExecuteCommandMessage;
@@ -29,7 +31,11 @@ public class StatusMessageHandler implements MessageHandler {
   }
 
   private void execHandle(ExecuteCommandMessage message) {
-    ProviderRegistry.access(ServiceProvider.class).execute(message.getCommand());
+    CommandResponseV1 response = ProviderRegistry.access(ServiceProvider.class).execute(message.getCommand());
+    if (response == null) {
+      return;
+    }
+    natsProvider.send(Subject.STATUS, new CommandResponseMessage(message.getRequestId(), response));
   }
 
   private void execHandle(CreateConsoleMessage message) {

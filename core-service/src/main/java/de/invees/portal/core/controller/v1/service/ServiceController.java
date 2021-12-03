@@ -9,14 +9,12 @@ import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.LockedServiceException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.service.ServiceV1;
+import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusTypeV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.model.v1.user.UserNameDetailsV1;
 import de.invees.portal.common.model.v1.user.UserV1;
-import de.invees.portal.common.nats.NatsProvider;
-import de.invees.portal.common.nats.Subject;
-import de.invees.portal.common.nats.message.status.ExecuteCommandMessage;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
@@ -43,7 +41,6 @@ public class ServiceController extends Controller {
     post("/v1/service/:service/execute/", this::execute);
     post("/v1/service/:service/console/", this::createConsole);
     get("/v1/service/:service/status/", this::getStatus);
-    get("/v1/service/:service/console/", this::getStatus);
     get("/v1/service/", this::list);
   }
 
@@ -52,24 +49,21 @@ public class ServiceController extends Controller {
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
-    ServiceStatusV1 status = serviceProvider().getStatus(service.getId());
-    if (status == null) {
-      throw new LockedServiceException("UNAVAILABLE_HOST");
-    }
-    if (status.getStatus() == ServiceStatusTypeV1.INSTALLING) {
-      throw new LockedServiceException("INSTALLING");
-    }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     UserV1 user = CoreTokenUtils.parseToken(req);
     body.addProperty("_id", UUID.randomUUID().toString());
     body.addProperty("executor", user.getId().toString());
     body.addProperty("service", service.getId().toString());
 
-    ProviderRegistry.access(NatsProvider.class).send(
-        Subject.STATUS,
-        new ExecuteCommandMessage(GsonUtils.GSON.fromJson(body, CommandV1.class))
-    );
-    return body.toString();
+    CommandResponseV1 response = serviceProvider().sendCommand(GsonUtils.GSON.fromJson(body, CommandV1.class));
+    if (!response.isSuccess()) {
+      throw new RuntimeException(response.getMessage());
+    }
+    JsonObject json = new JsonObject();
+    if (response.getMessage() != null) {
+      json.addProperty("message", response.getMessage());
+    }
+    return json.toString();
   }
 
   private Object createConsole(Request req, Response resp) {
@@ -82,6 +76,9 @@ public class ServiceController extends Controller {
       throw new LockedServiceException("UNAVAILABLE_HOST");
     }
     if (status.getStatus() == ServiceStatusTypeV1.INSTALLING) {
+      throw new LockedServiceException("INSTALLING");
+    }
+    if (status.getStatus() == ServiceStatusTypeV1.LOCKED) {
       throw new LockedServiceException("INSTALLING");
     }
     if (status.getStatus() == ServiceStatusTypeV1.STOPPED) {

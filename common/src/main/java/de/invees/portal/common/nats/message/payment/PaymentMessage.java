@@ -1,6 +1,6 @@
 package de.invees.portal.common.nats.message.payment;
 
-import de.invees.portal.common.nats.message.processing.Message;
+import de.invees.portal.common.nats.message.Message;
 import lombok.Data;
 
 @Data
