@@ -1,6 +1,7 @@
 package de.invees.portal.processing.worker.service.provider.proxmox;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.SoftwareDataSourceV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
@@ -10,6 +11,7 @@ import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
 import de.invees.portal.common.model.v1.service.command.ProxmoxActionV1;
 import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
+import de.invees.portal.common.model.v1.service.network.NetworkAddressV1;
 import de.invees.portal.common.model.v1.service.software.ServiceSoftwareTypeV1;
 import de.invees.portal.common.model.v1.service.software.ServiceSoftwareV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusTypeV1;
@@ -31,16 +33,22 @@ import lombok.Getter;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ProxmoxServiceProvider implements ServiceProvider {
 
+  private Application application;
   private Configuration configuration;
   private NatsProvider natsProvider;
   @Getter
   private PveClient pveClient;
   private final Map<UUID, ServiceStatusTypeV1> overrideStatus = new HashMap<>();
+  ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-  public ProxmoxServiceProvider(Configuration configuration) {
+  public ProxmoxServiceProvider(Application application, Configuration configuration) {
+    this.application = application;
     this.configuration = configuration;
     this.pveClient = new PveClient(configuration.getProxmox());
     this.natsProvider = ProviderRegistry.access(NatsProvider.class);
@@ -59,9 +67,10 @@ public class ProxmoxServiceProvider implements ServiceProvider {
           .memory(((Number) product.getFieldList().get("memory").getValue()).intValue())
           .cores(((Number) product.getFieldList().get("cpu").getValue()).intValue())
           .sata0(storage() + ":" + storage + ",format=qcow2")
-          .net0("virtio,bridge=vmbr0,firewall=1")
+          .net0("virtio,bridge=vmbr0,firewall=0")
           .vga("qxl")
           .build();
+
       pveClient.createVirtualMachine(create);
       while (true) {
         Thread.sleep(2000);
@@ -70,6 +79,13 @@ public class ProxmoxServiceProvider implements ServiceProvider {
           break;
         }
       }
+      pveClient.enableIpFilter(serviceId);
+      this.mount(serviceId, "");
+      pveClient.setBootOrder(serviceId, "order=ide2;sata0;net0");
+      Thread.sleep(2000);
+      NetworkAddressV1 address = networkAddressDataSource().applyNextAddress(serviceId);
+      pveClient.addAddress(serviceId, address.getAddress());
+
       this.natsProvider.send(Subject.PROCESSING, new ServiceCreatedMessage(
           order.getId(),
           serviceId,
@@ -124,6 +140,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       return new CommandResponseV1(false, "INSTALLATION_NOT_FOUND");
     }
     String isoId = software.getId().toString() + ".iso";
+    NetworkAddressV1 address = networkAddressDataSource().getAddressesOfService(command.getService()).get(0);
 
     new Thread(() -> {
       try {
@@ -149,7 +166,11 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
         File preseed = new File(isoFiles, "preseed.cfg");
         String linesPreseed = Files.readString(new File("install/preseed.cfg").toPath());
-        linesPreseed = linesPreseed.replace("{$password}", password).replace("{$hostname}", hostname);
+        linesPreseed = linesPreseed.replace("{$password}", password)
+            .replace("{$hostname}", hostname)
+            .replace("{$address}", address.getAddress())
+            .replace("{$netmask}", address.getNetmask())
+            .replace("{$gateway}", address.getGateway());
 
         Files.write(preseed.toPath(), linesPreseed.getBytes());
         ProcessUtils.execAndWait("echo preseed.cfg | cpio -H newc -o -A -F install.amd/initrd", isoFiles);
@@ -227,6 +248,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       } else {
         pveClient.mount(service, configuration.getNfsStorage() + ":iso/" + isoName);
       }
+      executor.schedule(application::sendStatus, 1000, TimeUnit.MILLISECONDS);
     } catch (Exception e) {
       Application.LOGGER.error("", e);
     }
@@ -281,21 +303,25 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
   private CommandResponseV1 execHandleStart(CommandV1 command) {
     pveClient.start(command.getService());
+    executor.schedule(application::sendStatus, 1000, TimeUnit.MILLISECONDS);
     return new CommandResponseV1(true, "");
   }
 
   private CommandResponseV1 execHandleRestart(CommandV1 command) {
     pveClient.restart(command.getService());
+    executor.schedule(application::sendStatus, 1000, TimeUnit.MILLISECONDS);
     return new CommandResponseV1(true, "");
   }
 
   private CommandResponseV1 execHandleStop(CommandV1 command) {
     pveClient.stop(command.getService());
+    executor.schedule(application::sendStatus, 1000, TimeUnit.MILLISECONDS);
     return new CommandResponseV1(true, "");
   }
 
   private CommandResponseV1 execHandleKill(CommandV1 command) {
     pveClient.kill(command.getService());
+    executor.schedule(application::sendStatus, 1000, TimeUnit.MILLISECONDS);
     return new CommandResponseV1(true, "");
   }
 
@@ -322,5 +348,9 @@ public class ProxmoxServiceProvider implements ServiceProvider {
 
   private SoftwareDataSourceV1 softwareDataSource() {
     return ProviderRegistry.access(DataSourceProvider.class).access(SoftwareDataSourceV1.class);
+  }
+
+  private NetworkAddressDataSourceV1 networkAddressDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(NetworkAddressDataSourceV1.class);
   }
 }

@@ -17,6 +17,5 @@ public class Configuration {
   private final DataSourceConfiguration dataSource;
   private final NatsConfiguration nats;
   private final ProxmoxConfiguration proxmox;
-  private final NetworkConfiguration network;
 
 }

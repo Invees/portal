@@ -17,6 +17,6 @@ public class ServiceStatusV1 implements Model {
   private Map<String, Object> configuration;
   private ServiceStatusTypeV1 status;
   private List<ServiceNetworkV1> network;
-  private long uptime;
+  private long lastStart;
 
 }

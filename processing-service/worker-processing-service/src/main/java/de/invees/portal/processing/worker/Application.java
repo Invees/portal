@@ -52,9 +52,7 @@ public class Application extends BasicApplication {
     new Thread(() -> {
       while (true) {
         try {
-          this.natsProvider.send(Subject.STATUS, new ServiceStatusMessage(
-              ProviderRegistry.access(ServiceProvider.class).getAllServiceStatus()
-          ));
+          sendStatus();
         } catch (Exception e) {
           LOGGER.error("", e);
         }
@@ -63,7 +61,7 @@ public class Application extends BasicApplication {
               configuration.getId(),
               ProviderRegistry.access(ServiceProvider.class).getUsage()
           ));
-          Thread.sleep(2500);
+          Thread.sleep(2000);
         } catch (Exception e) {
           LOGGER.error("", e);
         }
@@ -73,7 +71,7 @@ public class Application extends BasicApplication {
 
   private void loadServiceProvider() {
     if (ServiceTypeV1.valueOf(this.configuration.getServiceType()) == ServiceTypeV1.VIRTUAL_SERVER) {
-      ProxmoxServiceProvider provider = new ProxmoxServiceProvider(configuration);
+      ProxmoxServiceProvider provider = new ProxmoxServiceProvider(this, configuration);
       ProviderRegistry.register(ServiceProvider.class, provider);
       ProviderRegistry.register(ProxmoxServiceProvider.class, provider);
     }
@@ -105,6 +103,12 @@ public class Application extends BasicApplication {
   public void executeHandshake() {
     natsProvider.send(Subject.PROCESSING, new HandshakeMessage(
         new ProcessingWorkerV1(configuration.getId(), ServiceTypeV1.valueOf(configuration.getServiceType()))
+    ));
+  }
+
+  public void sendStatus() {
+    this.natsProvider.send(Subject.STATUS, new ServiceStatusMessage(
+        ProviderRegistry.access(ServiceProvider.class).getAllServiceStatus()
     ));
   }
 }

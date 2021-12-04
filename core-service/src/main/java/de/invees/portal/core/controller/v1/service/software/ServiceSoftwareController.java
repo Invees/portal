@@ -10,6 +10,7 @@ import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
+import org.bson.BsonNull;
 import spark.Request;
 import spark.Response;
 
@@ -35,7 +36,7 @@ public class ServiceSoftwareController extends Controller {
             ServiceSoftwareV1.class,
             Filters.or(
                 Filters.eq(ServiceSoftwareV1.BELONGS_TO, user.getId().toString()),
-                Filters.eq(ServiceSoftwareV1.BELONGS_TO, null)
+                Filters.eq(ServiceSoftwareV1.BELONGS_TO, BsonNull.VALUE)
             )
         )
     );

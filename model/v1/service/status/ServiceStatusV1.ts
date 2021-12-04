@@ -5,5 +5,5 @@ export default interface ServiceStatusV1 {
   configuration: any;
   status: string;
   network: Array<ServiceNetworkV1>;
-  uptime: number;
+  lastStart: number;
 }

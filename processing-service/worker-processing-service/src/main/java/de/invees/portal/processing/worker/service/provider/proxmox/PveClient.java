@@ -44,6 +44,9 @@ public class PveClient {
     public static final String TASKS = "{%url%}/api2/json/nodes/%0$s/tasks?vmid=%1$s&source=active";
     public static final String TASK = "{%url%}/api2/json/nodes/%0$s/tasks/%1$s";
     public static final String CONFIG = "{%url%}/api2/json/nodes/%0$s/qemu/%1$s/config";
+    public static final String FIREWALL = "{%url%}/api2/extjs/nodes/%0$s/qemu/%1$s/firewall/options";
+    public static final String FIREWALL_IPSET = "{%url%}/api2/extjs/nodes/%0$s/qemu/%1$s/firewall/ipset";
+    public static final String FIREWALL_IPSET_ADD = "{%url%}/api2/extjs/nodes/%0$s/qemu/%1$s/firewall/ipset/ipfilter-net0";
   }
 
   private final ProxmoxConfiguration configuration;
@@ -99,6 +102,32 @@ public class PveClient {
     return new ServiceConsoleV1(ServiceConsoleTypeV1.SPICE, configuration);
   }
 
+  public void addAddress(UUID service, String address) {
+    post(
+        URI.create(parse(URL.FIREWALL_IPSET_ADD, configuration.getNode(), getMachine(service).getVmid() + "")),
+        body(
+            "cidr", address,
+            "nomatch", "0"
+        )
+    );
+  }
+
+  public void enableIpFilter(UUID service) {
+    put(
+        URI.create(parse(URL.FIREWALL, configuration.getNode(), getMachine(service).getVmid() + "")),
+        body(
+            "enable", "0",
+            "ipfilter", "1"
+        )
+    );
+    post(
+        URI.create(parse(URL.FIREWALL_IPSET, configuration.getNode(), getMachine(service).getVmid() + "")),
+        body(
+            "name", "ipfilter-net0"
+        )
+    );
+  }
+
   public void killActiveTask(UUID service) {
     JsonArray data = get(
         URI.create(parse(URL.TASKS, configuration.getNode(), getMachine(service).getVmid() + ""))
@@ -130,14 +159,24 @@ public class PveClient {
     } else {
       configuration.put("cdrom", null);
     }
-
+    long lastStart = -1;
+    if (data.get("uptime").getAsLong() != 0) {
+      lastStart = (System.currentTimeMillis() / 1000) - (data.get("uptime").getAsLong());
+    }
     return new ServiceStatusV1(
         service,
         configuration,
         ServiceStatusTypeV1.valueOf(data.get("status").getAsString().toUpperCase()),
         null,
-        data.get("uptime").getAsLong() * 1000
+        lastStart * 1000
     );
+  }
+
+  public void setBootOrder(UUID service, String bootOrder) {
+    put(
+        URI.create(parse(URL.CONFIG, configuration.getNode(), getMachine(service).getVmid() + "")),
+        body("boot", bootOrder)
+    ).getAsJsonObject();
   }
 
   public void mount(UUID service, String iso) {

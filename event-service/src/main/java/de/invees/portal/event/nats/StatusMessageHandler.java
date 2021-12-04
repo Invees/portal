@@ -16,8 +16,14 @@ import de.invees.portal.event.event.EventServerProvider;
 import de.invees.portal.event.event.action.SubscribeAction;
 import lombok.Data;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @Data
 public class StatusMessageHandler implements MessageHandler {
+
+  private Map<UUID, String> statusCache = new HashMap<>();
 
   @Override
   public void handle(Message message) {
@@ -30,6 +36,11 @@ public class StatusMessageHandler implements MessageHandler {
     EventServerProvider eventServerProvider = ProviderRegistry.access(EventServerProvider.class);
     for (ServiceStatusV1 status : message.getStatus()) {
       ServiceV1 service = serviceDataSource().byId(status.getService(), ServiceV1.class);
+      String cachedStatus = GsonUtils.toJson(status);
+      if (statusCache.containsKey(status.getService()) && statusCache.get(status.getService()).equals(cachedStatus)) {
+        return;
+      }
+      statusCache.put(status.getService(), GsonUtils.toJson(status));
       for (EventHandler handler : eventServerProvider.getHandlers()) {
         try {
           if (handler.getUser() == null) {
