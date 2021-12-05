@@ -86,6 +86,14 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       NetworkAddressV1 address = networkAddressDataSource().applyNextAddress(serviceId);
       pveClient.addAddress(serviceId, address.getAddress());
 
+      if (order.getRequest().getConfiguration().containsKey("ipv4")) {
+        int fullCount = (int) order.getRequest().getConfiguration().get("ipv4");
+        for (int x = 0; x < fullCount; x++) {
+          address = networkAddressDataSource().applyNextAddress(serviceId);
+          pveClient.addAddress(serviceId, address.getAddress());
+        }
+      }
+
       this.natsProvider.send(Subject.PROCESSING, new ServiceCreatedMessage(
           order.getId(),
           serviceId,

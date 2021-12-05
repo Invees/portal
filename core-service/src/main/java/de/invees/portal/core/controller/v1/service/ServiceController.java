@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.LockedServiceException;
@@ -41,6 +42,7 @@ public class ServiceController extends Controller {
     post("/v1/service/:service/execute/", this::execute);
     post("/v1/service/:service/console/", this::createConsole);
     get("/v1/service/:service/status/", this::getStatus);
+    get("/v1/service/:service/network/", this::getNetwork);
     get("/v1/service/", this::list);
   }
 
@@ -100,6 +102,16 @@ public class ServiceController extends Controller {
     );
   }
 
+  private Object getNetwork(Request req, Response resp) {
+    ServiceV1 service = service(serviceDataSource(), req);
+    if (!isSameUser(req, service.getBelongsTo())) {
+      throw new UnauthorizedException();
+    }
+    return GsonUtils.GSON.toJson(
+        networkAddressDataSource().getAddressesOfService(service.getId())
+    );
+  }
+
   private Object getStatus(Request req, Response resp) {
     ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
@@ -155,5 +167,9 @@ public class ServiceController extends Controller {
 
   private ServiceProvider serviceProvider() {
     return ProviderRegistry.access(ServiceProvider.class);
+  }
+
+  private NetworkAddressDataSourceV1 networkAddressDataSource() {
+    return this.connection.get().access(NetworkAddressDataSourceV1.class);
   }
 }
