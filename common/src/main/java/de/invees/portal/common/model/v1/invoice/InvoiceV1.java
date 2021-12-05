@@ -25,7 +25,7 @@ public class InvoiceV1 implements Model {
   @SerializedName("_id")
   private long id;
   private UUID belongsTo;
-  private List<Long> serviceList;
+  private List<UUID> serviceList;
   private InvoicePriceV1 price;
   private long createdAt;
   private long paidAt;
