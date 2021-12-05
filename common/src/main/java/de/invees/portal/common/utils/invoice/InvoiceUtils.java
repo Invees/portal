@@ -2,11 +2,10 @@ package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.SectionDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.*;
 import de.invees.portal.common.exception.CalculationException;
 import de.invees.portal.common.model.v1.DisplayV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceFileV1;
 import de.invees.portal.common.model.v1.invoice.InvoicePositionV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
@@ -32,6 +31,20 @@ public class InvoiceUtils {
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 
+
+  public static InvoiceV1 create(UUID userId, List<OrderRequestV1> orderRequests) {
+    InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), userId, orderRequests);
+    byte[] data = InvoiceUtils.generateInvoiceFile(invoice);
+
+    invoiceFileDataSource().create(new InvoiceFileV1(
+        invoice.getId(),
+        data
+    ));
+    invoiceDataSource().create(invoice);
+
+    return invoice;
+  }
+
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderRequestV1> requests) {
     List<InvoicePositionV1> positions = new ArrayList<>();
     double price = 0;
@@ -49,6 +62,7 @@ public class InvoiceUtils {
             taxes(round(price), 19)
         ),
         System.currentTimeMillis(),
+        -1,
         positions,
         InvoiceStatusV1.UNPAID
     );
@@ -182,6 +196,16 @@ public class InvoiceUtils {
         .byId(id, ProductV1.class);
   }
 
+  private static InvoiceDataSourceV1 invoiceDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class)
+        .access(InvoiceDataSourceV1.class);
+  }
+
+  private static InvoiceFileDataSourceV1 invoiceFileDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class)
+        .access(InvoiceFileDataSourceV1.class);
+  }
+
   public static double taxes(double amount, double percent) {
     return amount - (amount / (1 + (percent / 100)));
   }
@@ -190,7 +214,7 @@ public class InvoiceUtils {
     return Math.round(price * 100.0) / 100.0;
   }
 
-  public static byte[] createInvoiceFile(InvoiceV1 invoice) {
+  public static byte[] generateInvoiceFile(InvoiceV1 invoice) {
     try {
       UserV1 user = ProviderRegistry.access(DataSourceProvider.class)
           .access(UserDataSourceV1.class)
@@ -206,8 +230,8 @@ public class InvoiceUtils {
       }
 
       String exportableInvoice = invoiceTemplate.replace("{{user_name}}", user.getName())
-          .replace("{{invoice_start}}", DATE_FORMAT.format(new Date(invoice.getDate())))
-          .replace("{{invoice_payment_until}}", DATE_FORMAT.format(new Date(invoice.getDate() + (1000L * 60 * 60 * 24 * 30))))
+          .replace("{{invoice_start}}", DATE_FORMAT.format(new Date(invoice.getCreatedAt())))
+          .replace("{{invoice_payment_until}}", DATE_FORMAT.format(new Date(invoice.getCreatedAt() + (1000L * 60 * 60 * 24 * 30))))
           .replace("{{user_company}}", user.getCompanyName())
           .replace("{{user_email}}", user.getEmail())
           .replace("{{user_phone}}", user.getPhone())

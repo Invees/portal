@@ -2,6 +2,7 @@ package de.invees.portal.common.model.v1.invoice;
 
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.v1.DisplayV1;
+import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -17,7 +18,7 @@ public class InvoicePositionV1 implements Model {
   private String key;
   private double price;
   private double priceWithAddons;
-  private de.invees.portal.common.model.v1.order.request.OrderRequestV1 orderRequest;
+  private OrderRequestV1 orderRequest;
   private List<InvoicePositionV1> positionList;
 
 }

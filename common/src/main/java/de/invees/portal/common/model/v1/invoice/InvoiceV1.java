@@ -17,16 +17,18 @@ public class InvoiceV1 implements Model {
   public static String BELONGS_TO = "belongsTo";
   public static String SERVICE_LIST = "serviceList";
   public static String PRICE = "price";
-  public static String DATE = "date";
+  public static String CREATED_AT = "createdAt";
+  public static String PAID_AT = "paidAt";
   public static String POSITION_LIST = "positionList";
   public static String STATUS = "status";
 
   @SerializedName("_id")
   private long id;
   private UUID belongsTo;
-  private List<UUID> serviceList;
+  private List<Long> serviceList;
   private InvoicePriceV1 price;
-  private long date;
+  private long createdAt;
+  private long paidAt;
   private List<InvoicePositionV1> positionList;
   private InvoiceStatusV1 status;
 
@@ -36,7 +38,8 @@ public class InvoiceV1 implements Model {
         BELONGS_TO,
         SERVICE_LIST,
         PRICE,
-        DATE,
+        CREATED_AT,
+        PAID_AT,
         POSITION_LIST,
         STATUS
     };

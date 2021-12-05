@@ -87,7 +87,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       pveClient.addAddress(serviceId, address.getAddress());
 
       if (order.getRequest().getConfiguration().containsKey("ipv4")) {
-        int fullCount = (int) order.getRequest().getConfiguration().get("ipv4");
+        int fullCount = ((Double) order.getRequest().getConfiguration().get("ipv4")).intValue();
         for (int x = 0; x < fullCount; x++) {
           address = networkAddressDataSource().applyNextAddress(serviceId);
           pveClient.addAddress(serviceId, address.getAddress());

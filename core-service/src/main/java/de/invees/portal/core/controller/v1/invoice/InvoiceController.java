@@ -9,16 +9,16 @@ import de.invees.portal.common.datasource.mongodb.v1.GatewayDataDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceFileDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
-import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
-import de.invees.portal.common.model.v1.gateway.GatewayDataV1;
 import de.invees.portal.common.model.v1.gateway.GatewayDataTypeV1;
-import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.model.v1.gateway.GatewayDataV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceFileV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.order.OrderStatusV1;
+import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.payment.PaymentMessage;
@@ -97,7 +97,7 @@ public class InvoiceController extends Controller {
     );
   }
 
-  private Object getInvoice(Request req, Response resp) throws IOException {
+  private Object getInvoice(Request req, Response resp) {
     InvoiceV1 invoice = invoice(invoiceDataSource(), req);
     if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
@@ -125,24 +125,17 @@ public class InvoiceController extends Controller {
   }
 
   public Object list(Request req, Response resp) {
-    if (req.queryParams("belongsTo") != null) {
-      return listForUser(req, resp);
-    }
-    throw new InputException("MISSING_ARGUMENT");
-  }
-
-  private Object listForUser(Request req, Response resp) {
-    UUID user = UUID.fromString(req.queryParams("belongsTo"));
-    if (!isSameUser(req, user)) {
-      throw new UnauthorizedException("UNAUTHORIZED");
+    UserV1 user = CoreTokenUtils.parseToken(req);
+    if (user == null) {
+      throw new UnauthorizedException();
     }
     return GsonUtils.GSON.toJson(
         list(
             invoiceDataSource(),
             req,
             InvoiceV1.class,
-            Filters.eq(InvoiceV1.BELONGS_TO, user.toString()),
-            Sorts.descending(InvoiceV1.DATE)
+            Filters.eq(InvoiceV1.BELONGS_TO, user.getId().toString()),
+            Sorts.descending(InvoiceV1.CREATED_AT)
         )
     );
   }

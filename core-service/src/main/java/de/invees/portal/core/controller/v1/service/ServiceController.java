@@ -25,7 +25,6 @@ import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -123,7 +122,6 @@ public class ServiceController extends Controller {
           service.getId(),
           new HashMap<>(),
           ServiceStatusTypeV1.UNAVAILABLE_HOST,
-          new ArrayList<>(),
           0
       ));
     }

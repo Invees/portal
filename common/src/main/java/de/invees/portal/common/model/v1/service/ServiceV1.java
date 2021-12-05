@@ -22,7 +22,7 @@ public class ServiceV1 implements Model {
   private UUID id;
   private String name;
   private UUID belongsTo;
-  private UUID parentOrder; // the order which belongs to this service, can be changed on upgrades etc.
+  private long parentOrder; // the order which belongs to this service, can be changed on upgrades etc.
   private UUID worker;
   private ServiceTypeV1 type;
 

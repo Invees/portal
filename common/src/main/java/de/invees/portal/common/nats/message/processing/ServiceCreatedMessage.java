@@ -8,7 +8,7 @@ import java.util.UUID;
 @Data
 public class ServiceCreatedMessage implements Message {
 
-  private final UUID orderId;
+  private final long orderId;
   private final UUID serviceId;
   private final UUID workerId;
 

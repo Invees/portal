@@ -26,6 +26,7 @@ public class OrderDataSourceV1 implements DataSource<OrderV1> {
   public void init(MongoCollection<Document> collection, MongoCollection<Document> sequenceCollection) {
     this.collection = collection;
     this.sequenceCollection = sequenceCollection;
+    this.createSequence();
   }
 
   @Override
@@ -35,12 +36,12 @@ public class OrderDataSourceV1 implements DataSource<OrderV1> {
 
   public void update(OrderV1 order) {
     this.getCollection().replaceOne(
-        Filters.eq(OrderV1.ID, order.getId().toString()),
+        Filters.eq(OrderV1.ID, order.getId()),
         this.map(order)
     );
   }
 
   public List<OrderV1> byInvoice(long id) {
-    return this.list(OrderV1.class, Filters.eq(OrderV1.INVOICE, id)).getItems();
+    return this.list(OrderV1.class, Filters.eq(OrderV1.INITIAL_INVOICE, id)).getItems();
   }
 }

@@ -40,10 +40,10 @@ public class ProcessingMessageHandler implements MessageHandler {
   private void execHandle(ServiceCreatedMessage message) {
     Application.LOGGER.info("Service with id '" + message.getServiceId() + "' was created on '" + message.getWorkerId() + "'!");
     OrderV1 order = orderDataSource().byId(message.getOrderId(), OrderV1.class);
-    InvoiceV1 invoice = invoiceDataSource().byId(order.getInvoice(), InvoiceV1.class);
+    InvoiceV1 invoice = invoiceDataSource().byId(order.getInitialInvoice(), InvoiceV1.class);
 
     ProductV1 product = productDataSource().byId(order.getRequest().getProduct(), ProductV1.class);
-    order.setStatus(OrderStatusV1.COMPLETED);
+    order.setStatus(OrderStatusV1.ACTIVE);
     orderDataSource().update(order);
     invoice.getServiceList().add(message.getServiceId());
 

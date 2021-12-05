@@ -51,7 +51,7 @@ public class Controller {
   // Order
   public OrderV1 order(OrderDataSourceV1 dataSource, Request req) {
     OrderV1 order = dataSource.byId(
-        UUID.fromString(req.params("order")), OrderV1.class
+        Integer.valueOf(req.params("order")), OrderV1.class
     );
     if (order == null) {
       throw new InputException("ORDER_NOT_FOUND");
