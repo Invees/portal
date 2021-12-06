@@ -15,7 +15,7 @@ public class InvoiceV1 implements Model {
 
   public static String ID = "_id";
   public static String BELONGS_TO = "belongsTo";
-  public static String SERVICE_LIST = "serviceList";
+  public static String ORDER_LIST = "orderList";
   public static String PRICE = "price";
   public static String CREATED_AT = "createdAt";
   public static String PAID_AT = "paidAt";
@@ -25,7 +25,7 @@ public class InvoiceV1 implements Model {
   @SerializedName("_id")
   private long id;
   private UUID belongsTo;
-  private List<UUID> serviceList;
+  private List<Long> orderList;
   private InvoicePriceV1 price;
   private long createdAt;
   private long paidAt;
@@ -36,7 +36,7 @@ public class InvoiceV1 implements Model {
     return new String[]{
         ID,
         BELONGS_TO,
-        SERVICE_LIST,
+        ORDER_LIST,
         PRICE,
         CREATED_AT,
         PAID_AT,

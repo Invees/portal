@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
@@ -18,6 +19,7 @@ import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
@@ -96,9 +98,10 @@ public class OrderController extends Controller {
           OrderStatusV1.PAYMENT_REQUIRED,
           -1
       );
+      invoice.getOrderList().add(order.getId());
       orderDataSource().create(order);
     }
-
+    invoiceDataSource().create(invoice);
     return GsonUtils.toJson(invoice);
   }
 
@@ -106,4 +109,8 @@ public class OrderController extends Controller {
     return this.connection.get().access(OrderDataSourceV1.class);
   }
 
+  private static InvoiceDataSourceV1 invoiceDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class)
+        .access(InvoiceDataSourceV1.class);
+  }
 }

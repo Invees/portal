@@ -7,13 +7,14 @@ import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
-import de.invees.portal.common.nats.message.payment.PaymentMessage;
 import de.invees.portal.common.nats.message.Message;
+import de.invees.portal.common.nats.message.payment.PaymentMessage;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.processing.master.Application;
 import de.invees.portal.processing.master.worker.WorkerRegistryProvider;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -32,7 +33,10 @@ public class PaymentMessageHandler implements MessageHandler {
 
   private void execHandle(PaymentMessage message) {
     InvoiceV1 invoice = invoiceDataSource().byId(message.getInvoiceId(), InvoiceV1.class);
-    List<OrderV1> orders = orderDataSource().byInvoice(invoice.getId());
+    List<OrderV1> orders = new ArrayList<>();
+    for (long order : invoice.getOrderList()) {
+      orders.add(orderDataSource().byId(order, OrderV1.class));
+    }
     for (OrderV1 order : orders) {
       workerRegistry.process(order);
     }

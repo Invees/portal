@@ -2,6 +2,7 @@ package de.invees.portal.processing.master.worker;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
+import de.invees.portal.common.model.v1.order.OrderStatusV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.service.ServiceTypeV1;
@@ -45,6 +46,9 @@ public class WorkerRegistryProvider implements Provider {
   }
 
   public void process(OrderV1 order) {
+    if (order.getStatus() != OrderStatusV1.PROCESSING) {
+      return;
+    }
     ProductV1 product = productDataSource().byId(order.getRequest().getProduct(), ProductV1.class);
     Map<UUID, ProcessingWorkerV1> workers = workerMap.get(product.getType());
     UUID bestWorker = null;

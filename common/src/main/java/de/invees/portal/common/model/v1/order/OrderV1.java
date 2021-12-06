@@ -15,7 +15,6 @@ public class OrderV1 implements Model {
   public static String ID = "_id";
   public static String BELONGS_TO = "belongsTo";
   public static String TYPE = "type";
-  public static String INITIAL_INVOICE = "initialInvoice";
   public static String ORDER_TIME = "orderTime";
   public static String REQUEST = "request";
   public static String STATUS = "status";
@@ -35,7 +34,6 @@ public class OrderV1 implements Model {
         ID,
         BELONGS_TO,
         TYPE,
-        INITIAL_INVOICE,
         ORDER_TIME,
         REQUEST,
         STATUS,

@@ -1,6 +1,7 @@
 package de.invees.portal.common.utils.invoice;
 
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.*;
 import de.invees.portal.common.exception.CalculationException;
@@ -10,6 +11,7 @@ import de.invees.portal.common.model.v1.invoice.InvoicePositionV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.invoice.price.InvoicePriceV1;
+import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.product.price.OneOffProductPriceV1;
@@ -24,13 +26,13 @@ import java.io.ByteArrayOutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class InvoiceUtils {
 
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
-
 
   public static InvoiceV1 create(UUID userId, List<OrderRequestV1> orderRequests) {
     InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), userId, orderRequests);
@@ -40,9 +42,23 @@ public class InvoiceUtils {
         invoice.getId(),
         data
     ));
-    invoiceDataSource().create(invoice);
 
     return invoice;
+  }
+
+  public static long getNextPaymentDate(OrderV1 order) {
+    List<InvoiceV1> invoices = invoiceDataSource()
+        .getCollection()
+        .find(Filters.eq(InvoiceV1.ORDER_LIST, order.getId()))
+        .map((d) -> invoiceDataSource().map(d, InvoiceV1.class))
+        .into(new ArrayList<>());
+    long paymentDate = 0;
+    if (invoices.size() == 1) {
+      paymentDate = invoices.get(invoices.size() - 1).getPaidAt();
+    } else {
+      paymentDate = invoices.get(invoices.size() - 1).getCreatedAt();
+    }
+    return paymentDate + TimeUnit.DAYS.toDays(30);
   }
 
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderRequestV1> requests) {

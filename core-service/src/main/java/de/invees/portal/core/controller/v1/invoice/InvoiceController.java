@@ -32,8 +32,10 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
@@ -70,18 +72,27 @@ public class InvoiceController extends Controller {
     }
     if (orderResponse.status().equalsIgnoreCase("COMPLETED")) {
       invoice.setStatus(InvoiceStatusV1.PAID);
+      invoice.setPaidAt(System.currentTimeMillis());
       invoiceDataSource().update(invoice);
+
       gatewayDataSource().create(new GatewayDataV1(
           UUID.randomUUID(),
           GatewayDataTypeV1.PAYPAL,
           orderResponse
       ));
-      List<OrderV1> orders = orderDataSource().byInvoice(invoice.getId());
+      List<OrderV1> orders = new ArrayList<>();
+      for (long order : invoice.getOrderList()) {
+        orders.add(orderDataSource().byId(order, OrderV1.class));
+      }
 
       for (OrderV1 order : orders) {
+        if (order.getStatus() != OrderStatusV1.PAYMENT_REQUIRED) {
+          continue;
+        }
         order.setStatus(OrderStatusV1.PROCESSING);
         orderDataSource().update(order);
       }
+
       ProviderRegistry.access(NatsProvider.class).send(Subject.PAYMENT, new PaymentMessage(invoice.getId()));
     }
     return GsonUtils.toJson(orderResponse);
