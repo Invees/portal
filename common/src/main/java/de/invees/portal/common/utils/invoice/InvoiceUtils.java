@@ -28,11 +28,21 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class InvoiceUtils {
 
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
+
+  public static InvoiceV1 createByOrders(UUID userId, List<OrderV1> orders) {
+    return create(
+        userId,
+        orders.stream()
+            .map(order -> order.getRequest())
+            .collect(Collectors.toList())
+    );
+  }
 
   public static InvoiceV1 create(UUID userId, List<OrderRequestV1> orderRequests) {
     InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), userId, orderRequests);
@@ -52,13 +62,13 @@ public class InvoiceUtils {
         .find(Filters.eq(InvoiceV1.ORDER_LIST, order.getId()))
         .map((d) -> invoiceDataSource().map(d, InvoiceV1.class))
         .into(new ArrayList<>());
-    long paymentDate = 0;
+    long paymentDate;
     if (invoices.size() == 1) {
       paymentDate = invoices.get(invoices.size() - 1).getPaidAt();
     } else {
       paymentDate = invoices.get(invoices.size() - 1).getCreatedAt();
     }
-    return paymentDate + TimeUnit.DAYS.toDays(30);
+    return paymentDate + TimeUnit.MINUTES.toMillis(3);
   }
 
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderRequestV1> requests) {
