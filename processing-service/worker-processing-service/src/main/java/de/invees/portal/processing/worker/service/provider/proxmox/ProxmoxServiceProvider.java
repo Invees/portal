@@ -4,8 +4,8 @@ import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.SoftwareDataSourceV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
-import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
@@ -55,11 +55,11 @@ public class ProxmoxServiceProvider implements ServiceProvider {
   }
 
   @Override
-  public void create(OrderV1 order) {
+  public void create(ContractV1 contract) {
     try {
       UUID serviceId = UUID.randomUUID();
-      OrderRequestV1 request = order.getRequest();
-      ProductV1 product = productDataSource().byId(request.getProduct(), ProductV1.class);
+      OrderV1 order = contract.getOrder();
+      ProductV1 product = productDataSource().byId(order.getProduct(), ProductV1.class);
       int storage = ((Number) product.getFieldList().get("storage").getValue()).intValue();
       VirtualMachineCreate create = VirtualMachineCreate.builder()
           .vmid(pveClient.getNextId())
@@ -86,8 +86,8 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       NetworkAddressV1 address = networkAddressDataSource().applyNextAddress(serviceId);
       pveClient.addAddress(serviceId, address.getAddress());
 
-      if (order.getRequest().getConfiguration().containsKey("ipv4")) {
-        int fullCount = ((Double) order.getRequest().getConfiguration().get("ipv4")).intValue();
+      if (contract.getOrder().getConfiguration().containsKey("ipv4")) {
+        int fullCount = ((Double) contract.getOrder().getConfiguration().get("ipv4")).intValue();
         for (int x = 0; x < fullCount; x++) {
           address = networkAddressDataSource().applyNextAddress(serviceId);
           pveClient.addAddress(serviceId, address.getAddress());
@@ -95,7 +95,7 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       }
 
       this.natsProvider.send(Subject.PROCESSING, new ServiceCreatedMessage(
-          order.getId(),
+          contract.getId(),
           serviceId,
           configuration.getId()
       ));

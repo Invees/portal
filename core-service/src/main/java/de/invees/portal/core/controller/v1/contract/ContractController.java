@@ -1,4 +1,4 @@
-package de.invees.portal.core.controller.v1.order;
+package de.invees.portal.core.controller.v1.contract;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -7,14 +7,14 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
-import de.invees.portal.common.model.v1.order.OrderStatusV1;
-import de.invees.portal.common.model.v1.order.OrderTypeV1;
+import de.invees.portal.common.model.v1.contract.ContractStatusV1;
+import de.invees.portal.common.model.v1.contract.ContractTypeV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
+import de.invees.portal.common.model.v1.contract.PrototypeContractV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
-import de.invees.portal.common.model.v1.order.PrototypeOrderV1;
-import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
@@ -31,23 +31,23 @@ import java.util.List;
 import static spark.Spark.get;
 import static spark.Spark.post;
 
-public class OrderController extends Controller {
+public class ContractController extends Controller {
 
   private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
-  public OrderController() {
-    get("/v1/order/:order/", this::getOrder);
-    get("/v1/order/", this::list);
-    post("/v1/order/preview/", this::previewOrder);
-    post("/v1/order/", this::placeOrder);
+  public ContractController() {
+    get("/v1/contract/:contract/", this::getContract);
+    get("/v1/contract/", this::list);
+    post("/v1/contract/preview/", this::previewOrder);
+    post("/v1/contract/", this::createContract);
   }
 
-  private Object getOrder(Request req, Response res) {
-    OrderV1 order = order(orderDataSource(), req);
-    if (!isSameUser(req, order.getBelongsTo())) {
+  private Object getContract(Request req, Response res) {
+    ContractV1 contract = contract(contractDataSource(), req);
+    if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    return GsonUtils.GSON.toJson(order);
+    return GsonUtils.GSON.toJson(contract);
   }
 
   public Object list(Request req, Response resp) {
@@ -57,56 +57,56 @@ public class OrderController extends Controller {
     }
     return GsonUtils.GSON.toJson(
         list(
-            orderDataSource(),
+            contractDataSource(),
             req,
-            PrototypeOrderV1.class,
-            Filters.eq(OrderV1.BELONGS_TO, user.getId().toString()),
-            Sorts.descending(OrderV1.ORDER_TIME)
+            PrototypeContractV1.class,
+            Filters.eq(ContractV1.BELONGS_TO, user.getId().toString()),
+            Sorts.descending(ContractV1.CREATED_AT)
         )
     );
   }
 
   public Object previewOrder(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    List<OrderRequestV1> orderRequests = new ArrayList<>();
-    for (JsonElement ele : body.get("orderRequests").getAsJsonArray()) {
-      orderRequests.add(GsonUtils.GSON.fromJson(ele, OrderRequestV1.class));
+    List<OrderV1> orders = new ArrayList<>();
+    for (JsonElement ele : body.get("orders").getAsJsonArray()) {
+      orders.add(GsonUtils.GSON.fromJson(ele, OrderV1.class));
     }
-    return GsonUtils.GSON.toJson(InvoiceUtils.calculate(-1, null, orderRequests));
+    return GsonUtils.GSON.toJson(InvoiceUtils.calculate(-1, null, orders));
   }
 
-  public Object placeOrder(Request req, Response resp) {
+  public Object createContract(Request req, Response resp) {
     UserV1 user = CoreTokenUtils.parseToken(req);
     if (user == null) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    List<OrderRequestV1> orderRequests = new ArrayList<>();
-    for (JsonElement ele : body.get("orderRequests").getAsJsonArray()) {
-      orderRequests.add(GsonUtils.GSON.fromJson(ele, OrderRequestV1.class));
+    List<OrderV1> orders = new ArrayList<>();
+    for (JsonElement ele : body.get("orders").getAsJsonArray()) {
+      orders.add(GsonUtils.GSON.fromJson(ele, OrderV1.class));
     }
 
-    InvoiceV1 invoice = InvoiceUtils.create(user.getId(), orderRequests);
+    InvoiceV1 invoice = InvoiceUtils.create(user.getId(), orders);
 
-    for (OrderRequestV1 orderRequest : orderRequests) {
-      OrderV1 order = new OrderV1(
-          orderDataSource().nextSequence(),
+    for (OrderV1 order : orders) {
+      ContractV1 contract = new ContractV1(
+          contractDataSource().nextSequence(),
           user.getId(),
-          OrderTypeV1.ORDER,
+          ContractTypeV1.DEFAULT,
           System.currentTimeMillis(),
-          orderRequest,
-          OrderStatusV1.PAYMENT_REQUIRED,
+          order,
+          ContractStatusV1.PAYMENT_REQUIRED,
           -1
       );
-      invoice.getOrderList().add(order.getId());
-      orderDataSource().create(order);
+      invoice.getContractList().add(contract.getId());
+      contractDataSource().create(contract);
     }
     invoiceDataSource().create(invoice);
     return GsonUtils.toJson(invoice);
   }
 
-  private OrderDataSourceV1 orderDataSource() {
-    return this.connection.get().access(OrderDataSourceV1.class);
+  private ContractDataSourceV1 contractDataSource() {
+    return this.connection.get().access(ContractDataSourceV1.class);
   }
 
   private static InvoiceDataSourceV1 invoiceDataSource() {

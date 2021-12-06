@@ -1,5 +1,5 @@
 import DisplayV1 from "@/model/v1/DisplayV1.ts";
-import OrderRequestV1 from "@/model/v1/order/request/OrderRequestV1.ts";
+import OrderV1 from "@/model/v1/order/OrderV1.ts";
 
 export default interface InvoicePositionV1 {
   displayName: DisplayV1;
@@ -8,6 +8,6 @@ export default interface InvoicePositionV1 {
   key: string;
   price: number;
   priceWithAddons: number;
-  orderRequest: OrderRequestV1;
+  order: OrderV1;
   positionList: Array<InvoicePositionV1>;
 }

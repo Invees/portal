@@ -1,6 +1,6 @@
 package de.invees.portal.processing.worker.service.provider;
 
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
 import de.invees.portal.common.model.v1.service.console.ServiceConsoleV1;
@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface ServiceProvider extends Provider {
 
-  void create(OrderV1 order);
+  void create(ContractV1 contract);
 
   CommandResponseV1 execute(CommandV1 command);
 

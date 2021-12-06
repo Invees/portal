@@ -7,7 +7,7 @@ import de.invees.portal.common.utils.provider.Provider;
 import de.invees.portal.core.Application;
 import de.invees.portal.core.configuration.Configuration;
 import de.invees.portal.core.controller.v1.invoice.InvoiceController;
-import de.invees.portal.core.controller.v1.order.OrderController;
+import de.invees.portal.core.controller.v1.contract.ContractController;
 import de.invees.portal.core.controller.v1.product.ProductController;
 import de.invees.portal.core.controller.v1.section.SectionController;
 import de.invees.portal.core.controller.v1.service.ServiceController;
@@ -22,7 +22,7 @@ public class HttpServerProvider implements Provider {
 
   public static final List<Class<?>> CONTROLLER = List.of(
       SectionController.class,
-      OrderController.class,
+      ContractController.class,
       UserController.class,
       InvoiceController.class,
       ProductController.class,

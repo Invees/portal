@@ -2,8 +2,8 @@ package de.invees.portal.processing.master.worker;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
-import de.invees.portal.common.model.v1.order.OrderStatusV1;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractStatusV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.service.ServiceTypeV1;
 import de.invees.portal.common.model.v1.worker.ProcessingWorkerV1;
@@ -45,11 +45,11 @@ public class WorkerRegistryProvider implements Provider {
     }).start();
   }
 
-  public void process(OrderV1 order) {
-    if (order.getStatus() != OrderStatusV1.PROCESSING) {
+  public void process(ContractV1 contract) {
+    if (contract.getStatus() != ContractStatusV1.PROCESSING) {
       return;
     }
-    ProductV1 product = productDataSource().byId(order.getRequest().getProduct(), ProductV1.class);
+    ProductV1 product = productDataSource().byId(contract.getOrder().getProduct(), ProductV1.class);
     Map<UUID, ProcessingWorkerV1> workers = workerMap.get(product.getType());
     UUID bestWorker = null;
     double bestUsage = 101;
@@ -63,7 +63,7 @@ public class WorkerRegistryProvider implements Provider {
         bestUsage = usage;
       }
     }
-    ProviderRegistry.access(NatsProvider.class).send(Subject.PROCESSING, new ExecuteOrderMessage(bestWorker, order));
+    ProviderRegistry.access(NatsProvider.class).send(Subject.PROCESSING, new ExecuteOrderMessage(bestWorker, contract));
   }
 
   public void register(ProcessingWorkerV1 worker) {

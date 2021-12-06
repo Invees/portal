@@ -8,7 +8,7 @@ import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.GatewayDataDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceFileDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
 import de.invees.portal.common.model.v1.gateway.GatewayDataTypeV1;
@@ -16,8 +16,8 @@ import de.invees.portal.common.model.v1.gateway.GatewayDataV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceFileV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
-import de.invees.portal.common.model.v1.order.OrderStatusV1;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractStatusV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
@@ -80,17 +79,17 @@ public class InvoiceController extends Controller {
           GatewayDataTypeV1.PAYPAL,
           orderResponse
       ));
-      List<OrderV1> orders = new ArrayList<>();
-      for (long order : invoice.getOrderList()) {
-        orders.add(orderDataSource().byId(order, OrderV1.class));
+      List<ContractV1> contracts = new ArrayList<>();
+      for (long contract : invoice.getContractList()) {
+        contracts.add(contractDataSource().byId(contract, ContractV1.class));
       }
 
-      for (OrderV1 order : orders) {
-        if (order.getStatus() != OrderStatusV1.PAYMENT_REQUIRED) {
+      for (ContractV1 contract : contracts) {
+        if (contract.getStatus() != ContractStatusV1.PAYMENT_REQUIRED) {
           continue;
         }
-        order.setStatus(OrderStatusV1.PROCESSING);
-        orderDataSource().update(order);
+        contract.setStatus(ContractStatusV1.PROCESSING);
+        contractDataSource().update(contract);
       }
 
       ProviderRegistry.access(NatsProvider.class).send(Subject.PAYMENT, new PaymentMessage(invoice.getId()));
@@ -151,8 +150,8 @@ public class InvoiceController extends Controller {
     );
   }
 
-  private OrderDataSourceV1 orderDataSource() {
-    return this.connection.get().access(OrderDataSourceV1.class);
+  private ContractDataSourceV1 contractDataSource() {
+    return this.connection.get().access(ContractDataSourceV1.class);
   }
 
   private InvoiceDataSourceV1 invoiceDataSource() {

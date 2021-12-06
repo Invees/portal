@@ -3,12 +3,12 @@ package de.invees.portal.common.datasource.mongodb.v1;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import lombok.Getter;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-public class OrderDataSourceV1 implements DataSource<OrderV1> {
+public class ContractDataSourceV1 implements DataSource<ContractV1> {
 
   @Getter
   private MongoCollection<Document> collection;
@@ -17,7 +17,7 @@ public class OrderDataSourceV1 implements DataSource<OrderV1> {
 
   @Override
   public String getName() {
-    return "OrderDataSource";
+    return "ContractDataSource";
   }
 
   @Override
@@ -32,10 +32,10 @@ public class OrderDataSourceV1 implements DataSource<OrderV1> {
     return null;
   }
 
-  public void update(OrderV1 order) {
+  public void update(ContractV1 contract) {
     this.getCollection().replaceOne(
-        Filters.eq(OrderV1.ID, order.getId()),
-        this.map(order)
+        Filters.eq(ContractV1.ID, contract.getId()),
+        this.map(contract)
     );
   }
 }

@@ -2,9 +2,9 @@ package de.invees.portal.processing.master.nats;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.message.Message;
@@ -33,12 +33,12 @@ public class PaymentMessageHandler implements MessageHandler {
 
   private void execHandle(PaymentMessage message) {
     InvoiceV1 invoice = invoiceDataSource().byId(message.getInvoiceId(), InvoiceV1.class);
-    List<OrderV1> orders = new ArrayList<>();
-    for (long order : invoice.getOrderList()) {
-      orders.add(orderDataSource().byId(order, OrderV1.class));
+    List<ContractV1> contracts = new ArrayList<>();
+    for (long contractId : invoice.getContractList()) {
+      contracts.add(contractDataSource().byId(contractId, ContractV1.class));
     }
-    for (OrderV1 order : orders) {
-      workerRegistry.process(order);
+    for (ContractV1 contract : contracts) {
+      workerRegistry.process(contract);
     }
   }
 
@@ -46,7 +46,7 @@ public class PaymentMessageHandler implements MessageHandler {
     return ProviderRegistry.access(DataSourceProvider.class).access(InvoiceDataSourceV1.class);
   }
 
-  public OrderDataSourceV1 orderDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(OrderDataSourceV1.class);
+  public ContractDataSourceV1 contractDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ContractDataSourceV1.class);
   }
 }

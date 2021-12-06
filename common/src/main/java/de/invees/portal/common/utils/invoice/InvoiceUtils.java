@@ -11,8 +11,8 @@ import de.invees.portal.common.model.v1.invoice.InvoicePositionV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.invoice.price.InvoicePriceV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
-import de.invees.portal.common.model.v1.order.request.OrderRequestV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.product.price.OneOffProductPriceV1;
 import de.invees.portal.common.model.v1.section.SectionV1;
@@ -35,17 +35,17 @@ public class InvoiceUtils {
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 
-  public static InvoiceV1 createByOrders(UUID userId, List<OrderV1> orders) {
+  public static InvoiceV1 createByContracts(UUID userId, List<ContractV1> contracts) {
     return create(
         userId,
-        orders.stream()
-            .map(order -> order.getRequest())
+        contracts.stream()
+            .map(contract -> contract.getOrder())
             .collect(Collectors.toList())
     );
   }
 
-  public static InvoiceV1 create(UUID userId, List<OrderRequestV1> orderRequests) {
-    InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), userId, orderRequests);
+  public static InvoiceV1 create(UUID userId, List<OrderV1> contractRequests) {
+    InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), userId, contractRequests);
     byte[] data = InvoiceUtils.generateInvoiceFile(invoice);
 
     invoiceFileDataSource().create(new InvoiceFileV1(
@@ -56,10 +56,10 @@ public class InvoiceUtils {
     return invoice;
   }
 
-  public static long getNextPaymentDate(OrderV1 order) {
+  public static long getNextPaymentDate(ContractV1 contract) {
     List<InvoiceV1> invoices = invoiceDataSource()
         .getCollection()
-        .find(Filters.eq(InvoiceV1.ORDER_LIST, order.getId()))
+        .find(Filters.eq(InvoiceV1.CONTRACT_LIST, contract.getId()))
         .map((d) -> invoiceDataSource().map(d, InvoiceV1.class))
         .into(new ArrayList<>());
     long paymentDate;
@@ -71,11 +71,11 @@ public class InvoiceUtils {
     return paymentDate + TimeUnit.MINUTES.toMillis(3);
   }
 
-  public static InvoiceV1 calculate(long id, UUID userId, List<OrderRequestV1> requests) {
+  public static InvoiceV1 calculate(long id, UUID userId, List<OrderV1> orders) {
     List<InvoicePositionV1> positions = new ArrayList<>();
     double price = 0;
-    for (OrderRequestV1 orderRequest : requests) {
-      price += calculateOrderRequest(orderRequest, positions);
+    for (OrderV1 order : orders) {
+      price += calculatecontractRequest(order, positions);
     }
 
     return new InvoiceV1(
@@ -94,15 +94,15 @@ public class InvoiceUtils {
     );
   }
 
-  private static double calculateOrderRequest(OrderRequestV1 orderRequest, List<InvoicePositionV1> positions) {
-    ProductV1 product = product(orderRequest.getProduct());
+  private static double calculatecontractRequest(OrderV1 contractRequest, List<InvoicePositionV1> positions) {
+    ProductV1 product = product(contractRequest.getProduct());
     SectionV1 section = section(product.getSection());
     if (!product.isActive() || !section.isActive()) {
       throw new CalculationException("PRODUCT_INACTIVE");
     }
     double price = 0;
 
-    for (String key : orderRequest.getConfiguration().keySet()) {
+    for (String key : contractRequest.getConfiguration().keySet()) {
       boolean found = false;
       for (SectionConfigurationEntryV1 entry : section.getConfigurationList()) {
         if (entry.getKey().equals(key)) {
@@ -114,7 +114,7 @@ public class InvoiceUtils {
         throw new CalculationException("TO_MANY_CONFIGURATION_ENTRIES");
       }
     }
-    for (Map.Entry<String, Object> entry : orderRequest.getConfiguration().entrySet()) {
+    for (Map.Entry<String, Object> entry : contractRequest.getConfiguration().entrySet()) {
       boolean found = false;
       SectionConfigurationEntryV1 configurationEntry = getConfigurationEntry(section, entry.getKey());
       for (SectionConfigurationEntryOptionV1 option : configurationEntry.getOptionList()) {
@@ -129,7 +129,7 @@ public class InvoiceUtils {
     }
 
     List<InvoicePositionV1> subPositions = new ArrayList<>();
-    for (Map.Entry<String, Object> entry : orderRequest.getConfiguration().entrySet()) {
+    for (Map.Entry<String, Object> entry : contractRequest.getConfiguration().entrySet()) {
       subPositions.add(new InvoicePositionV1(
           getConfigurationEntry(section, entry.getKey()).getDisplayName(),
           getEntryOption(section, entry.getKey(), entry.getValue()).getDisplayValue(),
@@ -143,7 +143,7 @@ public class InvoiceUtils {
       price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice();
     }
 
-    OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, orderRequest.getContractTerm());
+    OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, contractRequest.getContractTerm());
     if (oneOffPrice.getAmount() != 0) {
       subPositions.add(new InvoicePositionV1(
           new DisplayV1(
@@ -177,7 +177,7 @@ public class InvoiceUtils {
         product.getId(),
         product.getPrice().getAmount(),
         price,
-        orderRequest,
+        contractRequest,
         subPositions
     ));
     return price;
@@ -296,7 +296,7 @@ public class InvoiceUtils {
         exportablePositions.add(positionTemplate
             .replace("{{item_position}}", positionIndex.get() + "")
             .replace("{{position_displayName}}", position.getDisplayValue().getDe())
-            .replace("{{contract_time}}", months)
+            .replace("{{ORDER_TIME}}", months)
             .replace("{{product_price}}", DECIMAL_FORMAT.format(position.getPrice()))
         );
         positionIndex.set(positionIndex.get() + 1);

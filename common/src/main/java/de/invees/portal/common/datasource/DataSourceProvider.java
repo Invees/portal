@@ -48,7 +48,7 @@ public class DataSourceProvider implements Provider {
     dataSourceMap.put(ProductDataSourceV1.class, new ProductDataSourceV1());
     dataSourceMap.put(UserDataSourceV1.class, new UserDataSourceV1());
     dataSourceMap.put(UserAuthenticationDataSourceV1.class, new UserAuthenticationDataSourceV1());
-    dataSourceMap.put(OrderDataSourceV1.class, new OrderDataSourceV1());
+    dataSourceMap.put(ContractDataSourceV1.class, new ContractDataSourceV1());
     dataSourceMap.put(InvoiceDataSourceV1.class, new InvoiceDataSourceV1());
     dataSourceMap.put(InvoiceFileDataSourceV1.class, new InvoiceFileDataSourceV1());
     dataSourceMap.put(GatewayDataDataSourceV1.class, new GatewayDataDataSourceV1());

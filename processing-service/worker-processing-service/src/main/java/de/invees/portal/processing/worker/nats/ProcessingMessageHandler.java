@@ -47,6 +47,6 @@ public class ProcessingMessageHandler implements MessageHandler {
     if (!message.getWorkerId().equals(application.getConfiguration().getId())) {
       return;
     }
-    ProviderRegistry.access(ServiceProvider.class).create(message.getOrder());
+    ProviderRegistry.access(ServiceProvider.class).create(message.getContract());
   }
 }

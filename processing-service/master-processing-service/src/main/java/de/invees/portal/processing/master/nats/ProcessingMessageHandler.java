@@ -2,11 +2,11 @@ package de.invees.portal.processing.master.nats;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
-import de.invees.portal.common.model.v1.order.OrderStatusV1;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractStatusV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.nats.MessageHandler;
@@ -41,17 +41,17 @@ public class ProcessingMessageHandler implements MessageHandler {
 
   private void execHandle(ServiceCreatedMessage message) {
     Application.LOGGER.info("Service with id '" + message.getServiceId() + "' was created on '" + message.getWorkerId() + "'!");
-    OrderV1 order = orderDataSource().byId(message.getOrderId(), OrderV1.class);
+    ContractV1 contract = contractDataSource().byId(message.getContractId(), ContractV1.class);
 
-    ProductV1 product = productDataSource().byId(order.getRequest().getProduct(), ProductV1.class);
-    order.setStatus(OrderStatusV1.ACTIVE);
-    orderDataSource().update(order);
+    ProductV1 product = productDataSource().byId(contract.getOrder().getProduct(), ProductV1.class);
+    contract.setStatus(ContractStatusV1.ACTIVE);
+    contractDataSource().update(contract);
 
     serviceDataSource().create(new ServiceV1(
         message.getServiceId(),
         product.getDisplayName().getDe() + "-" + message.getServiceId().toString().split("-")[0],
-        order.getBelongsTo(),
-        order.getId(),
+        contract.getBelongsTo(),
+        contract.getId(),
         message.getWorkerId(),
         product.getType()
     ));
@@ -67,8 +67,8 @@ public class ProcessingMessageHandler implements MessageHandler {
     workerRegistry.keepAlive(message.getId(), message.getUsage());
   }
 
-  public OrderDataSourceV1 orderDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class).access(OrderDataSourceV1.class);
+  public ContractDataSourceV1 contractDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ContractDataSourceV1.class);
   }
 
   public ProductDataSourceV1 productDataSource() {

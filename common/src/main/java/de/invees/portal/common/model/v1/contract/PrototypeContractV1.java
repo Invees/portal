@@ -1,4 +1,4 @@
-package de.invees.portal.common.model.v1.order;
+package de.invees.portal.common.model.v1.contract;
 
 import com.google.gson.annotations.SerializedName;
 import de.invees.portal.common.model.Model;
@@ -9,22 +9,22 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @Data
-public class PrototypeOrderV1 implements Model {
+public class PrototypeContractV1 implements Model {
 
   @SerializedName("_id")
   private long id;
   private UUID belongsTo;
-  private OrderTypeV1 type;
-  private long orderTime;
-  private OrderStatusV1 status;
+  private ContractTypeV1 type;
+  private long orderAt;
+  private ContractStatusV1 status;
 
   public static String[] projection() {
     return new String[]{
-        OrderV1.ID,
-        OrderV1.BELONGS_TO,
-        OrderV1.TYPE,
-        OrderV1.ORDER_TIME,
-        OrderV1.STATUS
+        ContractV1.ID,
+        ContractV1.BELONGS_TO,
+        ContractV1.TYPE,
+        ContractV1.CREATED_AT,
+        ContractV1.STATUS
     };
   }
 

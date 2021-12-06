@@ -4,9 +4,10 @@ import InvoicePositionV1 from "@/model/v1/invoice/InvoicePositionV1.ts";
 export default interface InvoiceV1 {
   _id: number;
   belongsTo: string;
-  serviceList: Array<string>;
+  contractList: Array<number>;
   price: InvoicePriceV1;
-  date: number;
+  createdAt: number;
+  paidAt: number;
   positionList: Array<InvoicePositionV1>;
   status: string;
 }

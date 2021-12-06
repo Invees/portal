@@ -2,12 +2,12 @@ package de.invees.portal.core.utils.controller;
 
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.OrderDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.model.Model;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
-import de.invees.portal.common.model.v1.order.OrderV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.InputUtils;
@@ -48,15 +48,15 @@ public class Controller {
     return userId.equals(user.getId());
   }
 
-  // Order
-  public OrderV1 order(OrderDataSourceV1 dataSource, Request req) {
-    OrderV1 order = dataSource.byId(
-        Integer.valueOf(req.params("order")), OrderV1.class
+  // Contract
+  public ContractV1 contract(ContractDataSourceV1 dataSource, Request req) {
+    ContractV1 contract = dataSource.byId(
+        Integer.valueOf(req.params("contract")), ContractV1.class
     );
-    if (order == null) {
-      throw new InputException("ORDER_NOT_FOUND");
+    if (contract == null) {
+      throw new InputException("CONTRACT_NOT_FOUND");
     }
-    return order;
+    return contract;
   }
 
   // Invoice
