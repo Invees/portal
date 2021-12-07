@@ -5,19 +5,19 @@ import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.GatewayDataDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceFileDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
+import de.invees.portal.common.model.v1.contract.ContractStatusV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.gateway.GatewayDataTypeV1;
 import de.invees.portal.common.model.v1.gateway.GatewayDataV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceFileV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
-import de.invees.portal.common.model.v1.contract.ContractStatusV1;
-import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
@@ -28,6 +28,7 @@ import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.Application;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
+import org.bson.conversions.Bson;
 import spark.Request;
 import spark.Response;
 
@@ -139,12 +140,19 @@ public class InvoiceController extends Controller {
     if (user == null) {
       throw new UnauthorizedException();
     }
+    List<Bson> filters = new ArrayList<>();
+    if (req.queryParams("contract") != null) {
+      filters.add(Filters.eq(InvoiceV1.CONTRACT_LIST, Long.valueOf(req.queryParams("contract"))));
+    }
+    System.out.println(req.queryParams("contract"));
+    filters.add(Filters.eq(InvoiceV1.BELONGS_TO, user.getId().toString()));
+
     return GsonUtils.GSON.toJson(
         list(
             invoiceDataSource(),
             req,
             InvoiceV1.class,
-            Filters.eq(InvoiceV1.BELONGS_TO, user.getId().toString()),
+            Filters.and(filters),
             Sorts.descending(InvoiceV1.CREATED_AT)
         )
     );

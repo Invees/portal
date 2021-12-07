@@ -68,14 +68,14 @@ public class InvoiceUtils {
     } else {
       paymentDate = invoices.get(invoices.size() - 1).getCreatedAt();
     }
-    return paymentDate + TimeUnit.MINUTES.toMillis(3);
+    return paymentDate + TimeUnit.DAYS.toMillis(30);
   }
 
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderV1> orders) {
     List<InvoicePositionV1> positions = new ArrayList<>();
     double price = 0;
     for (OrderV1 order : orders) {
-      price += calculatecontractRequest(order, positions);
+      price += calculateOrder(order, positions);
     }
 
     return new InvoiceV1(
@@ -94,7 +94,7 @@ public class InvoiceUtils {
     );
   }
 
-  private static double calculatecontractRequest(OrderV1 contractRequest, List<InvoicePositionV1> positions) {
+  private static double calculateOrder(OrderV1 contractRequest, List<InvoicePositionV1> positions) {
     ProductV1 product = product(contractRequest.getProduct());
     SectionV1 section = section(product.getSection());
     if (!product.isActive() || !section.isActive()) {

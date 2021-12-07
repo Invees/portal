@@ -59,8 +59,8 @@ public class Application extends BasicApplication {
         }
         for (Map.Entry<UUID, List<ContractV1>> entry : userOrderMap.entrySet()) {
           InvoiceV1 invoice = InvoiceUtils.createByContracts(entry.getKey(), entry.getValue());
-          for (ContractV1 order : entry.getValue()) {
-            invoice.getContractList().add(order.getId());
+          for (ContractV1 contract : entry.getValue()) {
+            invoice.getContractList().add(contract.getId());
           }
           invoiceDataSource().create(invoice);
           Application.LOGGER.info("Invoice " + invoice.getId() + " was created successfully!");
