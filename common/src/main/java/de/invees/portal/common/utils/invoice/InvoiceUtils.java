@@ -68,7 +68,7 @@ public class InvoiceUtils {
     } else {
       paymentDate = invoices.get(invoices.size() - 1).getCreatedAt();
     }
-    return paymentDate + TimeUnit.DAYS.toMillis(30);
+    return paymentDate + TimeUnit.MINUTES.toMillis(30); // TODO: Change to days
   }
 
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderV1> orders) {

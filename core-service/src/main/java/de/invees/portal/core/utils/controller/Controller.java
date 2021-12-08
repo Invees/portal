@@ -1,13 +1,14 @@
 package de.invees.portal.core.utils.controller;
 
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.model.Model;
-import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.model.v1.service.DisplayServiceV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.InputUtils;
@@ -71,6 +72,16 @@ public class Controller {
   }
 
   // Service
+  public DisplayServiceV1 displayService(ServiceDataSourceV1 dataSource, Request req) {
+    DisplayServiceV1 service = dataSource.byId(
+        UUID.fromString(req.params("service")), DisplayServiceV1.class
+    );
+    if (service == null) {
+      throw new InputException("SERVICE__NOT_FOUND");
+    }
+    return service;
+  }
+
   public ServiceV1 service(ServiceDataSourceV1 dataSource, Request req) {
     ServiceV1 service = dataSource.byId(
         UUID.fromString(req.params("service")), ServiceV1.class
@@ -80,4 +91,5 @@ public class Controller {
     }
     return service;
   }
+
 }

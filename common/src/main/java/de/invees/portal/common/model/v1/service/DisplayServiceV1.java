@@ -9,15 +9,7 @@ import java.util.UUID;
 
 @Data
 @AllArgsConstructor
-public class ServiceV1 implements Model {
-
-  public static String ID = "_id";
-  public static String NAME = "name";
-  public static String BELONGS_TO = "belongsTo";
-  public static String CONTRACT = "contract";
-  public static String WORKER = "worker";
-  public static String SERVICE_TYPE = "type";
-  public static String DELETED = "deleted";
+public class DisplayServiceV1 implements Model {
 
   @SerializedName("_id")
   private UUID id;
@@ -26,11 +18,10 @@ public class ServiceV1 implements Model {
   private long contract; // the contract which belongs to this service, can be changed on upgrades etc.
   private UUID worker;
   private ServiceTypeV1 type;
-  private boolean deleted;
 
   public static String[] projection() {
     return new String[]{
-        ID, NAME, BELONGS_TO, CONTRACT, WORKER, SERVICE_TYPE, DELETED
+        ServiceV1.ID, ServiceV1.NAME, ServiceV1.BELONGS_TO, ServiceV1.CONTRACT, ServiceV1.WORKER, ServiceV1.SERVICE_TYPE
     };
   }
 }

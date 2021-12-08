@@ -1,6 +1,7 @@
 package de.invees.portal.common.datasource.mongodb.v1;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSource;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import lombok.Getter;
@@ -27,6 +28,6 @@ public class ServiceDataSourceV1 implements DataSource<ServiceV1> {
 
   @Override
   public Bson listFilter() {
-    return null;
+    return Filters.eq(ServiceV1.DELETED, false);
   }
 }

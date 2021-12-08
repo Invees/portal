@@ -3,7 +3,7 @@ package de.invees.portal.event.nats;
 import com.google.gson.JsonObject;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
-import de.invees.portal.common.model.v1.service.ServiceV1;
+import de.invees.portal.common.model.v1.service.DisplayServiceV1;
 import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.message.Message;
@@ -35,7 +35,7 @@ public class StatusMessageHandler implements MessageHandler {
   private void execHandle(ServiceStatusMessage message) {
     EventServerProvider eventServerProvider = ProviderRegistry.access(EventServerProvider.class);
     for (ServiceStatusV1 status : message.getStatus()) {
-      ServiceV1 service = serviceDataSource().byId(status.getService(), ServiceV1.class);
+      DisplayServiceV1 service = serviceDataSource().byId(status.getService(), DisplayServiceV1.class);
       String cachedStatus = GsonUtils.toJson(status);
       if (statusCache.containsKey(status.getService()) && statusCache.get(status.getService()).equals(cachedStatus)) {
         return;

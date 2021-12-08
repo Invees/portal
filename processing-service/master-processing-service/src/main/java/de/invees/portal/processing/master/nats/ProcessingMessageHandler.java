@@ -1,8 +1,8 @@
 package de.invees.portal.processing.master.nats;
 
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
@@ -53,7 +53,8 @@ public class ProcessingMessageHandler implements MessageHandler {
         contract.getBelongsTo(),
         contract.getId(),
         message.getWorkerId(),
-        product.getType()
+        product.getType(),
+        false
     ));
   }
 

@@ -7,8 +7,10 @@ import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
+import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.LockedServiceException;
 import de.invees.portal.common.exception.UnauthorizedException;
+import de.invees.portal.common.model.v1.service.DisplayServiceV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
@@ -50,6 +52,9 @@ public class ServiceController extends Controller {
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
+    if (service.isDeleted()) {
+      throw new InputException("SERVICE_IS_DELETED");
+    }
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     UserV1 user = CoreTokenUtils.parseToken(req);
     body.addProperty("_id", UUID.randomUUID().toString());
@@ -71,6 +76,9 @@ public class ServiceController extends Controller {
     ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
+    }
+    if (service.isDeleted()) {
+      throw new InputException("SERVICE_IS_DELETED");
     }
     ServiceStatusV1 status = serviceProvider().getStatus(service.getId());
     if (status == null) {
@@ -95,6 +103,9 @@ public class ServiceController extends Controller {
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
+    if (service.isDeleted()) {
+      throw new InputException("SERVICE_IS_DELETED");
+    }
     UserNameDetailsV1 details = userDataSource().byId(service.getBelongsTo(), UserNameDetailsV1.class);
     return GsonUtils.GSON.toJson(
         details
@@ -106,6 +117,9 @@ public class ServiceController extends Controller {
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
+    if (service.isDeleted()) {
+      throw new InputException("SERVICE_IS_DELETED");
+    }
     return GsonUtils.GSON.toJson(
         networkAddressDataSource().getAddressesOfService(service.getId())
     );
@@ -115,6 +129,9 @@ public class ServiceController extends Controller {
     ServiceV1 service = service(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
+    }
+    if (service.isDeleted()) {
+      throw new InputException("SERVICE_IS_DELETED");
     }
     ServiceStatusV1 status = serviceProvider().getStatus(service.getId());
     if (status == null) {
@@ -132,11 +149,15 @@ public class ServiceController extends Controller {
 
   private Object getService(Request req, Response resp) {
     ServiceV1 service = service(serviceDataSource(), req);
+    DisplayServiceV1 displayService = displayService(serviceDataSource(), req);
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
+    if (service.isDeleted()) {
+      throw new InputException("SERVICE_IS_DELETED");
+    }
     return GsonUtils.GSON.toJson(
-        service
+        displayService
     );
   }
 
@@ -149,8 +170,11 @@ public class ServiceController extends Controller {
         list(
             serviceDataSource(),
             req,
-            ServiceV1.class,
-            Filters.eq(ServiceV1.BELONGS_TO, user.getId().toString())
+            DisplayServiceV1.class,
+            Filters.and(
+                Filters.eq(ServiceV1.DELETED, false),
+                Filters.eq(ServiceV1.BELONGS_TO, user.getId().toString())
+            )
         )
     );
   }
