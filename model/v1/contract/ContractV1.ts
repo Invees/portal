@@ -4,7 +4,7 @@ export default interface ContractV1 {
   _id: number;
   belongsTo: string;
   type: string;
-  orderAt: number;
+  createdAt: number;
   order: OrderV1;
   status: string;
   replacedWith: number;

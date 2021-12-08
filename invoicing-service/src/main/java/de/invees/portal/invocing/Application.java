@@ -3,11 +3,11 @@ package de.invees.portal.invocing;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.BasicApplication;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
-import de.invees.portal.common.model.v1.invoice.InvoiceV1;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.utils.invoice.InvoiceUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.invocing.configuration.Configuration;
@@ -39,12 +39,17 @@ public class Application extends BasicApplication {
             .map(d -> contractDataSource().map(d, ContractV1.class))
             .into(new ArrayList<>());
         List<ContractV1> newInvoicesForContract = new ArrayList<>();
+        List<ContractV1> canceledContracts = new ArrayList<>();
         for (ContractV1 order : orders) {
           if (order.getStatus() != ContractStatusV1.ACTIVE) {
             continue;
           }
           if (System.currentTimeMillis() > InvoiceUtils.getNextPaymentDate(order)) {
-            newInvoicesForContract.add(order);
+            if (order.isInCancellation()) {
+              canceledContracts.add(order); // delete service because the contract is in cancellation
+            } else {
+              newInvoicesForContract.add(order); // create new invoice because the contract is still active
+            }
           }
         }
         Map<UUID, List<ContractV1>> userOrderMap = new HashMap<>();

@@ -144,7 +144,7 @@ public class InvoiceController extends Controller {
     if (req.queryParams("contract") != null) {
       filters.add(Filters.eq(InvoiceV1.CONTRACT_LIST, Long.valueOf(req.queryParams("contract"))));
     }
-    System.out.println(req.queryParams("contract"));
+
     filters.add(Filters.eq(InvoiceV1.BELONGS_TO, user.getId().toString()));
 
     return GsonUtils.GSON.toJson(

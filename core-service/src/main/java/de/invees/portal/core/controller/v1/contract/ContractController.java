@@ -6,14 +6,14 @@ import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
-import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
 import de.invees.portal.common.model.v1.contract.ContractTypeV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.contract.PrototypeContractV1;
+import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
@@ -30,6 +30,7 @@ import java.util.List;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.delete;
 
 public class ContractController extends Controller {
 
@@ -40,6 +41,7 @@ public class ContractController extends Controller {
     get("/v1/contract/", this::list);
     post("/v1/contract/preview/", this::previewOrder);
     post("/v1/contract/", this::createContract);
+    post("/v1/contract/:contract/cancel/", this::cancel);
   }
 
   private Object getContract(Request req, Response res) {
@@ -75,6 +77,16 @@ public class ContractController extends Controller {
     return GsonUtils.GSON.toJson(InvoiceUtils.calculate(-1, null, orders));
   }
 
+  private Object cancel(Request req, Response resp) {
+    ContractV1 contract = contract(contractDataSource(), req);
+    if (!isSameUser(req, contract.getBelongsTo())) {
+      throw new UnauthorizedException("UNAUTHORIZED");
+    }
+    contract.setInCancellation(true);
+    contractDataSource().update(contract);
+    return GsonUtils.toJson(contract);
+  }
+
   public Object createContract(Request req, Response resp) {
     UserV1 user = CoreTokenUtils.parseToken(req);
     if (user == null) {
@@ -96,7 +108,8 @@ public class ContractController extends Controller {
           System.currentTimeMillis(),
           order,
           ContractStatusV1.PAYMENT_REQUIRED,
-          -1
+          -1,
+          false
       );
       invoice.getContractList().add(contract.getId());
       contractDataSource().create(contract);
