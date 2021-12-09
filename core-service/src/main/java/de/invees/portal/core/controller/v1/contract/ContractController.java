@@ -30,7 +30,6 @@ import java.util.List;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
-import static spark.Spark.delete;
 
 public class ContractController extends Controller {
 
@@ -78,11 +77,12 @@ public class ContractController extends Controller {
   }
 
   private Object cancel(Request req, Response resp) {
+    JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
     ContractV1 contract = contract(contractDataSource(), req);
     if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    contract.setInCancellation(true);
+    contract.setInCancellation(body.get("cancel").getAsBoolean());
     contractDataSource().update(contract);
     return GsonUtils.toJson(contract);
   }
