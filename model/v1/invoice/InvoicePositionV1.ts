@@ -10,4 +10,5 @@ export default interface InvoicePositionV1 {
   priceWithAddons: number;
   order: OrderV1;
   positionList: Array<InvoicePositionV1>;
+  interval: number;
 }

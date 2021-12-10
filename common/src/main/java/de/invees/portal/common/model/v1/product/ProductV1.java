@@ -3,6 +3,8 @@ package de.invees.portal.common.model.v1.product;
 import com.google.gson.annotations.SerializedName;
 import de.invees.portal.common.model.v1.DisplayV1;
 import de.invees.portal.common.model.Model;
+import de.invees.portal.common.model.v1.product.field.ProductFieldValueV1;
+import de.invees.portal.common.model.v1.product.price.ProductPriceV1;
 import de.invees.portal.common.model.v1.service.ServiceTypeV1;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,9 +29,9 @@ public class ProductV1 implements Model {
   private String section;
   private DisplayV1 displayName;
   private String description;
-  private Map<String, de.invees.portal.common.model.v1.product.field.ProductFieldValueV1> fieldList;
+  private Map<String, ProductFieldValueV1> fieldList;
   private ServiceTypeV1 type;
-  private de.invees.portal.common.model.v1.product.price.ProductPriceV1 price;
+  private ProductPriceV1 price;
   private boolean active;
 
   public static String[] projection() {

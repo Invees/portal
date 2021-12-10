@@ -3,6 +3,9 @@ package de.invees.portal.common.model.v1.section;
 import com.google.gson.annotations.SerializedName;
 import de.invees.portal.common.model.v1.DisplayV1;
 import de.invees.portal.common.model.Model;
+import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryV1;
+import de.invees.portal.common.model.v1.section.field.SectionFieldV1;
+import de.invees.portal.common.model.v1.section.tag.SectionTagV1;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -24,9 +27,9 @@ public class SectionV1 implements Model {
   private String id;
   private DisplayV1 displayName;
   private DisplayV1 description;
-  private List<de.invees.portal.common.model.v1.section.field.SectionFieldV1> fieldList;
-  private List<de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryV1> configurationList;
-  private List<de.invees.portal.common.model.v1.section.tag.SectionTagV1> tagList;
+  private List<SectionFieldV1> fieldList;
+  private List<SectionConfigurationEntryV1> configurationList;
+  private List<SectionTagV1> tagList;
   private boolean active;
 
   public static String[] projection() {

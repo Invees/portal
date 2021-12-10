@@ -49,6 +49,9 @@ public class StatusMessageHandler implements MessageHandler {
           if (!handler.getSubscriptions().contains(SubscribeAction.SERVICE_STATUS)) {
             continue;
           }
+          if (service == null) {
+            continue;
+          }
           if (!handler.getUser().getId().equals(service.getBelongsTo())) {
             continue;
           }

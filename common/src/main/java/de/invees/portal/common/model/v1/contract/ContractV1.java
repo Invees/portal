@@ -19,7 +19,6 @@ public class ContractV1 implements Model {
   public static String ORDER = "order";
   public static String STATUS = "status";
   public static String REPLACED_WITH = "replacedWith";
-  public static String IN_CANCELLATION = "inCancellation";
 
   @SerializedName("_id")
   private long id;
@@ -28,8 +27,7 @@ public class ContractV1 implements Model {
   private long createdAt;
   private OrderV1 order;
   private ContractStatusV1 status;
-  private long replacedWith; // contract may be replaced by another contract e.g more IPv4 Address, more ram or any upgrades
-  private boolean inCancellation;
+  private long replacedWith; // contract may be replaced by another contract e.g more IPv4 Address, more ram or any upgrades;
 
   public static String[] projection() {
     return new String[]{
@@ -39,8 +37,7 @@ public class ContractV1 implements Model {
         CREATED_AT,
         ORDER,
         STATUS,
-        REPLACED_WITH,
-        IN_CANCELLATION
+        REPLACED_WITH
     };
   }
 }

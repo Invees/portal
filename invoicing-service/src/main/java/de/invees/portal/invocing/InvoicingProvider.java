@@ -2,12 +2,10 @@ package de.invees.portal.invocing;
 
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
+import de.invees.portal.common.datasource.mongodb.v1.*;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
+import de.invees.portal.common.model.v1.contract.cancellation.ContractCancellationV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.service.command.CommandV1;
@@ -35,11 +33,12 @@ public class InvoicingProvider {
         List<ContractV1> activeContracts = new ArrayList<>();
         List<ContractV1> canceledContracts = new ArrayList<>();
         for (ContractV1 order : orders) {
+          ContractCancellationV1 cancellation = contractCancellationDataSource().getLastCancellation(order.getId());
           if (order.getStatus() != ContractStatusV1.ACTIVE) {
             continue;
           }
           if (System.currentTimeMillis() > InvoiceUtils.getNextPaymentDate(order)) {
-            if (order.isInCancellation()) {
+            if (cancellation != null && cancellation.getEffectiveAt() < System.currentTimeMillis()) {
               canceledContracts.add(order); // delete service because the contract is in cancellation
             } else {
               activeContracts.add(order); // create new invoice because the contract is still active
@@ -143,6 +142,10 @@ public class InvoicingProvider {
 
   private ContractDataSourceV1 contractDataSource() {
     return ProviderRegistry.access(DataSourceProvider.class).access(ContractDataSourceV1.class);
+  }
+
+  private ContractCancellationDataSourceV1 contractCancellationDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ContractCancellationDataSourceV1.class);
   }
 
   private InvoiceDataSourceV1 invoiceDataSource() {

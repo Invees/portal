@@ -6,14 +6,15 @@ import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.*;
 import de.invees.portal.common.exception.CalculationException;
 import de.invees.portal.common.model.v1.DisplayV1;
+import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceFileV1;
 import de.invees.portal.common.model.v1.invoice.InvoicePositionV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.invoice.price.InvoicePriceV1;
-import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
+import de.invees.portal.common.model.v1.product.price.IntervalProductPriceV1;
 import de.invees.portal.common.model.v1.product.price.OneOffProductPriceV1;
 import de.invees.portal.common.model.v1.section.SectionV1;
 import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryOptionV1;
@@ -68,7 +69,7 @@ public class InvoiceUtils {
     } else {
       paymentDate = invoices.get(invoices.size() - 1).getCreatedAt();
     }
-    return paymentDate + TimeUnit.MINUTES.toMillis(30); // TODO: Change to days
+    return paymentDate + TimeUnit.DAYS.toMillis(contract.getOrder().getPaymentInterval() * 30); // TODO: Change to days
   }
 
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderV1> orders) {
@@ -94,15 +95,15 @@ public class InvoiceUtils {
     );
   }
 
-  private static double calculateOrder(OrderV1 contractRequest, List<InvoicePositionV1> positions) {
-    ProductV1 product = product(contractRequest.getProduct());
+  private static double calculateOrder(OrderV1 order, List<InvoicePositionV1> positions) {
+    ProductV1 product = product(order.getProduct());
     SectionV1 section = section(product.getSection());
     if (!product.isActive() || !section.isActive()) {
       throw new CalculationException("PRODUCT_INACTIVE");
     }
     double price = 0;
 
-    for (String key : contractRequest.getConfiguration().keySet()) {
+    for (String key : order.getConfiguration().keySet()) {
       boolean found = false;
       for (SectionConfigurationEntryV1 entry : section.getConfigurationList()) {
         if (entry.getKey().equals(key)) {
@@ -114,7 +115,7 @@ public class InvoiceUtils {
         throw new CalculationException("TO_MANY_CONFIGURATION_ENTRIES");
       }
     }
-    for (Map.Entry<String, Object> entry : contractRequest.getConfiguration().entrySet()) {
+    for (Map.Entry<String, Object> entry : order.getConfiguration().entrySet()) {
       boolean found = false;
       SectionConfigurationEntryV1 configurationEntry = getConfigurationEntry(section, entry.getKey());
       for (SectionConfigurationEntryOptionV1 option : configurationEntry.getOptionList()) {
@@ -129,21 +130,22 @@ public class InvoiceUtils {
     }
 
     List<InvoicePositionV1> subPositions = new ArrayList<>();
-    for (Map.Entry<String, Object> entry : contractRequest.getConfiguration().entrySet()) {
+    for (Map.Entry<String, Object> entry : order.getConfiguration().entrySet()) {
       subPositions.add(new InvoicePositionV1(
           getConfigurationEntry(section, entry.getKey()).getDisplayName(),
           getEntryOption(section, entry.getKey(), entry.getValue()).getDisplayValue(),
           entry.getValue(),
           entry.getKey(),
-          getEntryOption(section, entry.getKey(), entry.getValue()).getPrice(),
-          getEntryOption(section, entry.getKey(), entry.getValue()).getPrice(),
+          getEntryOption(section, entry.getKey(), entry.getValue()).getPrice() * order.getPaymentInterval(),
+          getEntryOption(section, entry.getKey(), entry.getValue()).getPrice() * order.getPaymentInterval(),
           null,
-          new ArrayList<>()
+          new ArrayList<>(),
+          order.getPaymentInterval()
       ));
-      price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice();
+      price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice() * order.getPaymentInterval();
     }
 
-    OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, contractRequest.getContractTerm());
+    OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, order.getContractTerm());
     if (oneOffPrice.getAmount() != 0) {
       subPositions.add(new InvoicePositionV1(
           new DisplayV1(
@@ -159,11 +161,12 @@ public class InvoiceUtils {
           oneOffPrice.getAmount(),
           oneOffPrice.getAmount(),
           null,
-          new ArrayList<>()
+          new ArrayList<>(),
+          order.getPaymentInterval()
       ));
     }
     price += oneOffPrice.getAmount();
-    price += product.getPrice().getAmount();
+    price += getIntervalPrice(product, order.getPaymentInterval()).getAmount();
     positions.add(new InvoicePositionV1(
         new DisplayV1(
             section.getDisplayName().getDe() + " " + product.getDisplayName().getDe(),
@@ -175,12 +178,22 @@ public class InvoiceUtils {
         ),
         "product",
         product.getId(),
-        product.getPrice().getAmount(),
+        getIntervalPrice(product, order.getPaymentInterval()).getAmount(),
         price,
-        contractRequest,
-        subPositions
+        order,
+        subPositions,
+        order.getPaymentInterval()
     ));
     return price;
+  }
+
+  private static IntervalProductPriceV1 getIntervalPrice(ProductV1 product, int paymentInterval) {
+    for (IntervalProductPriceV1 intervalPrice : product.getPrice().getIntervalList()) {
+      if (intervalPrice.getPaymentInterval() == paymentInterval) {
+        return intervalPrice;
+      }
+    }
+    return null;
   }
 
   private static OneOffProductPriceV1 getOneOffPrice(ProductV1 product, int contractTerm) {
@@ -288,15 +301,15 @@ public class InvoiceUtils {
     List<String> exportablePositions = new ArrayList<>();
     for (InvoicePositionV1 position : positions) {
       if (position.getPrice() != 0) {
-        String months = "";
+        String paymentInterval = "";
         if (!position.getKey().equalsIgnoreCase("ONE_OFF")) {
-          months = "1 Monat(e)";
+          paymentInterval = position.getInterval() + " Monat(e)";
         }
 
         exportablePositions.add(positionTemplate
             .replace("{{item_position}}", positionIndex.get() + "")
             .replace("{{position_displayName}}", position.getDisplayValue().getDe())
-            .replace("{{ORDER_TIME}}", months)
+            .replace("{{payment_interval}}", paymentInterval)
             .replace("{{product_price}}", DECIMAL_FORMAT.format(position.getPrice()))
         );
         positionIndex.set(positionIndex.get() + 1);

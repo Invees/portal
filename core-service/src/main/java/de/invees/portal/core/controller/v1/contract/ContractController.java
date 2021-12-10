@@ -6,13 +6,16 @@ import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.ContractCancellationDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
+import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
 import de.invees.portal.common.model.v1.contract.ContractTypeV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.contract.PrototypeContractV1;
+import de.invees.portal.common.model.v1.contract.cancellation.ContractCancellationV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.user.UserV1;
@@ -26,7 +29,9 @@ import spark.Request;
 import spark.Response;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
@@ -41,6 +46,7 @@ public class ContractController extends Controller {
     post("/v1/contract/preview/", this::previewOrder);
     post("/v1/contract/", this::createContract);
     post("/v1/contract/:contract/cancel/", this::cancel);
+    get("/v1/contract/:contract/cancel/", this::getCancel);
   }
 
   private Object getContract(Request req, Response res) {
@@ -82,9 +88,34 @@ public class ContractController extends Controller {
     if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    contract.setInCancellation(body.get("cancel").getAsBoolean());
-    contractDataSource().update(contract);
-    return GsonUtils.toJson(contract);
+    if (contract.getStatus() == ContractStatusV1.COMPLETED
+        || contract.getStatus() == ContractStatusV1.CANCELED
+        || contract.getStatus() == ContractStatusV1.EXTENDED) {
+      throw new InputException("CONTRACT_IS_COMPLETED");
+    }
+    long nextPaymentDate = -1;
+    if (body.get("cancel").getAsBoolean()) {
+      System.out.println(new Date(InvoiceUtils.getNextPaymentDate(contract)));
+      nextPaymentDate = InvoiceUtils.getNextPaymentDate(contract);
+    }
+
+    ContractCancellationV1 cancellation = new ContractCancellationV1(
+        UUID.randomUUID(),
+        contract.getId(),
+        System.currentTimeMillis(),
+        nextPaymentDate,
+        body.get("cancel").getAsBoolean()
+    );
+    contractCancellationDataSource().create(cancellation);
+    return GsonUtils.toJson(cancellation);
+  }
+
+  private Object getCancel(Request req, Response resp) {
+    ContractV1 contract = contract(contractDataSource(), req);
+    if (!isSameUser(req, contract.getBelongsTo())) {
+      throw new UnauthorizedException("UNAUTHORIZED");
+    }
+    return GsonUtils.toJson(contractCancellationDataSource().getLastCancellation(contract.getId()));
   }
 
   public Object createContract(Request req, Response resp) {
@@ -108,8 +139,7 @@ public class ContractController extends Controller {
           System.currentTimeMillis(),
           order,
           ContractStatusV1.PAYMENT_REQUIRED,
-          -1,
-          false
+          -1
       );
       invoice.getContractList().add(contract.getId());
       contractDataSource().create(contract);
@@ -120,6 +150,10 @@ public class ContractController extends Controller {
 
   private ContractDataSourceV1 contractDataSource() {
     return this.connection.get().access(ContractDataSourceV1.class);
+  }
+
+  private ContractCancellationDataSourceV1 contractCancellationDataSource() {
+    return this.connection.get().access(ContractCancellationDataSourceV1.class);
   }
 
   private static InvoiceDataSourceV1 invoiceDataSource() {

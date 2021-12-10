@@ -4,13 +4,11 @@ import de.invees.portal.common.model.Model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
-public class ProductPriceV1 implements Model {
+public class IntervalProductPriceV1 implements Model {
 
-  private List<IntervalProductPriceV1> intervalList;
-  private List<OneOffProductPriceV1> oneOffList;
+  private double amount;
+  private int paymentInterval;
 
 }

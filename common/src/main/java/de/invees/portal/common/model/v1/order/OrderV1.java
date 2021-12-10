@@ -13,5 +13,6 @@ public class OrderV1 implements Model {
   private String product;
   private Map<String, Object> configuration;
   private int contractTerm;
+  private int paymentInterval;
 
 }
