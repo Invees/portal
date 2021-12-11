@@ -12,6 +12,7 @@ import de.invees.portal.common.model.v1.invoice.InvoicePositionV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceStatusV1;
 import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.invoice.price.InvoicePriceV1;
+import de.invees.portal.common.model.v1.order.ContractUpgradeV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.product.price.IntervalProductPriceV1;
@@ -31,10 +32,62 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public class InvoiceUtils {
+public class ContractUtils {
 
   public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
+
+  public static InvoiceV1 createByUpgrades(ContractV1 contract, List<ContractUpgradeV1> upgrades) {
+    OrderV1 order = contract.getOrder();
+    ProductV1 product = product(order.getProduct());
+    SectionV1 section = section(product.getSection());
+    long daysLeft = TimeUnit.MILLISECONDS.toDays(getNextPaymentDate(contract) - System.currentTimeMillis());
+
+    System.out.println(daysLeft);
+
+    List<InvoicePositionV1> positions = new ArrayList<>();
+    double price = 0;
+
+    for (ContractUpgradeV1 upgrade : upgrades) {
+      price += calculateSubPosition(product, section, upgrade.getKey(), upgrade.getValue(), positions, daysLeft);
+    }
+
+    InvoiceV1 invoice = new InvoiceV1(
+        invoiceDataSource().nextSequence(),
+        contract.getBelongsTo(),
+        new ArrayList<>(),
+        new InvoicePriceV1(
+            round(price) - taxes(round(price), 19),
+            round(price),
+            taxes(round(price), 19)
+        ),
+        System.currentTimeMillis(),
+        -1,
+        positions,
+        InvoiceStatusV1.UNPAID
+    );
+    byte[] data = ContractUtils.generateInvoiceFile(invoice);
+
+    invoiceFileDataSource().create(new InvoiceFileV1(
+        invoice.getId(),
+        data
+    ));
+
+    return invoice;
+  }
+
+  public static void applyUpgradeToContract(ContractV1 contract, List<ContractUpgradeV1> upgrades) {
+    OrderV1 order = contract.getOrder();
+    for (ContractUpgradeV1 upgrade : upgrades) {
+      Object data = order.getConfiguration().get(upgrade.getKey());
+      if (data instanceof Double) {
+        order.getConfiguration().put(upgrade.getKey(), ((Double) data) + ((Number) upgrade.getValue()).doubleValue());
+      } else if (data instanceof Integer) {
+        order.getConfiguration().put(upgrade.getKey(), ((Integer) data) + ((Number) upgrade.getValue()).intValue());
+      }
+    }
+    calculateOrder(order, new ArrayList<>()); // Validate
+  }
 
   public static InvoiceV1 createByContracts(UUID userId, List<ContractV1> contracts) {
     return create(
@@ -45,9 +98,9 @@ public class InvoiceUtils {
     );
   }
 
-  public static InvoiceV1 create(UUID userId, List<OrderV1> contractRequests) {
-    InvoiceV1 invoice = InvoiceUtils.calculate(invoiceDataSource().nextSequence(), userId, contractRequests);
-    byte[] data = InvoiceUtils.generateInvoiceFile(invoice);
+  public static InvoiceV1 create(UUID userId, List<OrderV1> order) {
+    InvoiceV1 invoice = ContractUtils.calculate(invoiceDataSource().nextSequence(), userId, order);
+    byte[] data = ContractUtils.generateInvoiceFile(invoice);
 
     invoiceFileDataSource().create(new InvoiceFileV1(
         invoice.getId(),
@@ -69,7 +122,7 @@ public class InvoiceUtils {
     } else {
       paymentDate = invoices.get(invoices.size() - 1).getCreatedAt();
     }
-    return paymentDate + TimeUnit.DAYS.toMillis(contract.getOrder().getPaymentInterval() * 30); // TODO: Change to days
+    return paymentDate + TimeUnit.DAYS.toMillis(contract.getOrder().getPaymentInterval()); // TODO: Change to days
   }
 
   public static InvoiceV1 calculate(long id, UUID userId, List<OrderV1> orders) {
@@ -98,9 +151,6 @@ public class InvoiceUtils {
   private static double calculateOrder(OrderV1 order, List<InvoicePositionV1> positions) {
     ProductV1 product = product(order.getProduct());
     SectionV1 section = section(product.getSection());
-    if (!product.isActive() || !section.isActive()) {
-      throw new CalculationException("PRODUCT_INACTIVE");
-    }
     double price = 0;
 
     for (String key : order.getConfiguration().keySet()) {
@@ -113,6 +163,18 @@ public class InvoiceUtils {
       }
       if (!found) {
         throw new CalculationException("TO_MANY_CONFIGURATION_ENTRIES");
+      }
+    }
+    for (SectionConfigurationEntryV1 entry : section.getConfigurationList()) {
+      boolean found = false;
+      for (String key : order.getConfiguration().keySet()) {
+        if (entry.getKey().equals(key)) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        throw new CalculationException("MISSING_CONFIGURATION_ENTRIES");
       }
     }
     for (Map.Entry<String, Object> entry : order.getConfiguration().entrySet()) {
@@ -131,18 +193,7 @@ public class InvoiceUtils {
 
     List<InvoicePositionV1> subPositions = new ArrayList<>();
     for (Map.Entry<String, Object> entry : order.getConfiguration().entrySet()) {
-      subPositions.add(new InvoicePositionV1(
-          getConfigurationEntry(section, entry.getKey()).getDisplayName(),
-          getEntryOption(section, entry.getKey(), entry.getValue()).getDisplayValue(),
-          entry.getValue(),
-          entry.getKey(),
-          getEntryOption(section, entry.getKey(), entry.getValue()).getPrice() * order.getPaymentInterval(),
-          getEntryOption(section, entry.getKey(), entry.getValue()).getPrice() * order.getPaymentInterval(),
-          null,
-          new ArrayList<>(),
-          order.getPaymentInterval()
-      ));
-      price += getEntryOption(section, entry.getKey(), entry.getValue()).getPrice() * order.getPaymentInterval();
+      price += calculateSubPosition(product, section, entry.getKey(), entry.getValue(), subPositions, order.getPaymentInterval());
     }
 
     OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, order.getContractTerm());
@@ -162,7 +213,8 @@ public class InvoiceUtils {
           oneOffPrice.getAmount(),
           null,
           new ArrayList<>(),
-          order.getPaymentInterval()
+          order.getPaymentInterval(),
+          0
       ));
     }
     price += oneOffPrice.getAmount();
@@ -182,9 +234,26 @@ public class InvoiceUtils {
         price,
         order,
         subPositions,
-        order.getPaymentInterval()
+        order.getPaymentInterval(),
+        getIntervalPrice(product, 30).getAmount()
     ));
     return price;
+  }
+
+  private static double calculateSubPosition(ProductV1 product, SectionV1 section, String key, Object value, List<InvoicePositionV1> subPositions, long paymentDays) {
+    subPositions.add(new InvoicePositionV1(
+        getConfigurationEntry(section, key).getDisplayName(),
+        getEntryOption(section, key, value).getDisplayValue(),
+        value,
+        key,
+        (getEntryOption(section, key, value).getPrice()) * ((double) paymentDays / 30d),
+        (getEntryOption(section, key, value).getPrice()) * ((double) paymentDays / 30d),
+        null,
+        new ArrayList<>(),
+        (int) paymentDays,
+        getEntryOption(section, key, value).getPrice()
+    ));
+    return (getEntryOption(section, key, value).getPrice()) * ((double) paymentDays / 30d);
   }
 
   private static IntervalProductPriceV1 getIntervalPrice(ProductV1 product, int paymentInterval) {
@@ -216,6 +285,10 @@ public class InvoiceUtils {
 
   private static SectionConfigurationEntryOptionV1 getEntryOption(SectionV1 section, String key, Object value) {
     for (SectionConfigurationEntryOptionV1 option : getConfigurationEntry(section, key).getOptionList()) {
+      if (value instanceof Integer && option.getValue() instanceof Double
+          && ((Integer) value).doubleValue() == (double) option.getValue()) {
+        return option;
+      }
       if (option.getValue().equals(value)) {
         return option;
       }
@@ -303,7 +376,7 @@ public class InvoiceUtils {
       if (position.getPrice() != 0) {
         String paymentInterval = "";
         if (!position.getKey().equalsIgnoreCase("ONE_OFF")) {
-          paymentInterval = position.getInterval() + " Monat(e)";
+          paymentInterval = position.getInterval() + " Tag(e)";
         }
 
         exportablePositions.add(positionTemplate
@@ -311,6 +384,7 @@ public class InvoiceUtils {
             .replace("{{position_displayName}}", position.getDisplayValue().getDe())
             .replace("{{payment_interval}}", paymentInterval)
             .replace("{{product_price}}", DECIMAL_FORMAT.format(position.getPrice()))
+            .replace("{{product_price_month}}", DECIMAL_FORMAT.format(position.getPricePerMonth()))
         );
         positionIndex.set(positionIndex.get() + 1);
       }

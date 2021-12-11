@@ -21,5 +21,6 @@ public class InvoicePositionV1 implements Model {
   private OrderV1 order;
   private List<InvoicePositionV1> positionList;
   private int interval;
+  private double pricePerMonth;
 
 }

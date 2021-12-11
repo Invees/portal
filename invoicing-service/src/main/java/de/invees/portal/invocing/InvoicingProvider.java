@@ -14,7 +14,7 @@ import de.invees.portal.common.model.v1.service.network.NetworkAddressV1;
 import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.status.ExecuteCommandMessage;
-import de.invees.portal.common.utils.invoice.InvoiceUtils;
+import de.invees.portal.common.utils.invoice.ContractUtils;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 
 import java.util.*;
@@ -37,7 +37,7 @@ public class InvoicingProvider {
           if (order.getStatus() != ContractStatusV1.ACTIVE) {
             continue;
           }
-          if (System.currentTimeMillis() > InvoiceUtils.getNextPaymentDate(order)) {
+          if (System.currentTimeMillis() > ContractUtils.getNextPaymentDate(order)) {
             if (cancellation != null && cancellation.getEffectiveAt() < System.currentTimeMillis()) {
               canceledContracts.add(order); // delete service because the contract is in cancellation
             } else {
@@ -121,7 +121,7 @@ public class InvoicingProvider {
 
   private void createInvoice(Map.Entry<UUID, List<ContractV1>> entry) {
     try {
-      InvoiceV1 invoice = InvoiceUtils.createByContracts(entry.getKey(), entry.getValue());
+      InvoiceV1 invoice = ContractUtils.createByContracts(entry.getKey(), entry.getValue());
       for (ContractV1 contract : entry.getValue()) {
         invoice.getContractList().add(contract.getId());
       }

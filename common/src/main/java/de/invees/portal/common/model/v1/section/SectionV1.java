@@ -1,8 +1,8 @@
 package de.invees.portal.common.model.v1.section;
 
 import com.google.gson.annotations.SerializedName;
-import de.invees.portal.common.model.v1.DisplayV1;
 import de.invees.portal.common.model.Model;
+import de.invees.portal.common.model.v1.DisplayV1;
 import de.invees.portal.common.model.v1.section.configuration.SectionConfigurationEntryV1;
 import de.invees.portal.common.model.v1.section.field.SectionFieldV1;
 import de.invees.portal.common.model.v1.section.tag.SectionTagV1;
