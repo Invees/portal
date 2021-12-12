@@ -5,6 +5,7 @@ import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.SoftwareDataSourceV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
+import de.invees.portal.common.model.v1.order.ContractUpgradeV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.service.command.CommandResponseV1;
@@ -57,13 +58,13 @@ public class ProxmoxServiceProvider implements ServiceProvider {
   @Override
   public void create(ContractV1 contract) {
     try {
-      UUID serviceId = UUID.randomUUID();
+      UUID service = UUID.randomUUID();
       OrderV1 order = contract.getOrder();
       ProductV1 product = productDataSource().byId(order.getProduct(), ProductV1.class);
       int storage = ((Number) product.getFieldList().get("storage").getValue()).intValue();
       VirtualMachineCreate create = VirtualMachineCreate.builder()
           .vmid(pveClient.getNextId())
-          .name(serviceId.toString())
+          .name(service.toString())
           .memory(((Number) product.getFieldList().get("memory").getValue()).intValue())
           .cores(((Number) product.getFieldList().get("cpu").getValue()).intValue())
           .sata0(storage() + ":" + storage + ",format=qcow2")
@@ -74,29 +75,25 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       pveClient.createVirtualMachine(create);
       while (true) {
         Thread.sleep(2000);
-        VirtualMachine machine = pveClient.getMachine(serviceId);
+        VirtualMachine machine = pveClient.getMachine(service);
         if (machine != null) {
           break;
         }
       }
-      pveClient.enableIpFilter(serviceId);
-      this.mount(serviceId, "");
-      pveClient.setBootOrder(serviceId, "order=ide2;sata0;net0");
+      pveClient.enableIpFilter(service);
+      this.mount(service, "");
+      pveClient.setBootOrder(service, "order=ide2;sata0;net0");
       Thread.sleep(2000);
-      NetworkAddressV1 address = networkAddressDataSource().applyNextAddress(serviceId);
-      pveClient.addAddress(serviceId, address.getAddress());
+
+      applyUpgradeSingle(service, new ContractUpgradeV1("ipv4", 1));
 
       if (contract.getOrder().getConfiguration().containsKey("ipv4")) {
-        int fullCount = ((Double) contract.getOrder().getConfiguration().get("ipv4")).intValue();
-        for (int x = 0; x < fullCount; x++) {
-          address = networkAddressDataSource().applyNextAddress(serviceId);
-          pveClient.addAddress(serviceId, address.getAddress());
-        }
+        applyUpgradeSingle(service, new ContractUpgradeV1("ipv4", contract.getOrder().getConfiguration().get("ipv4")));
       }
 
       this.natsProvider.send(Subject.PROCESSING, new ServiceCreatedMessage(
           contract.getId(),
-          serviceId,
+          service,
           configuration.getId()
       ));
     } catch (Exception e) {
@@ -262,6 +259,21 @@ public class ProxmoxServiceProvider implements ServiceProvider {
     }
   }
 
+  private void applyUpgradeSingle(UUID service, ContractUpgradeV1 upgrade) {
+    if (upgrade.getKey().equalsIgnoreCase("ipv4")) {
+      int fullCount = 0;
+      if (upgrade.getValue() instanceof Double) {
+        fullCount = ((Double) upgrade.getValue()).intValue();
+      } else {
+        fullCount = (int) upgrade.getValue();
+      }
+      for (int x = 0; x < fullCount; x++) {
+        NetworkAddressV1 address = networkAddressDataSource().applyNextAddress(service);
+        pveClient.addAddress(service, address.getAddress());
+      }
+    }
+  }
+
   @Override
   public double getUsage() {
     List<VirtualMachine> machines = pveClient.getVirtualMachines();
@@ -307,6 +319,13 @@ public class ProxmoxServiceProvider implements ServiceProvider {
       return null;
     }
     return pveClient.createConsole(service);
+  }
+
+  @Override
+  public void applyUpgrade(UUID service, List<ContractUpgradeV1> upgrades) {
+    for (ContractUpgradeV1 upgrade : upgrades) {
+      this.applyUpgradeSingle(service, upgrade);
+    }
   }
 
   private CommandResponseV1 execHandleStart(CommandV1 command) {

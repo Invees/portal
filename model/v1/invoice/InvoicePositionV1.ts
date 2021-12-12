@@ -11,4 +11,5 @@ export default interface InvoicePositionV1 {
   order: OrderV1;
   positionList: Array<InvoicePositionV1>;
   interval: number;
+  pricePerMonth: number;
 }

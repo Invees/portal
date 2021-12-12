@@ -3,7 +3,6 @@ package de.invees.portal.invocing;
 import de.invees.portal.common.BasicApplication;
 import de.invees.portal.invocing.configuration.Configuration;
 
-
 public class Application extends BasicApplication {
 
   private Configuration configuration;

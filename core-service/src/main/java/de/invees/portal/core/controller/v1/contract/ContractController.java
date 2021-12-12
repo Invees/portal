@@ -20,6 +20,9 @@ import de.invees.portal.common.model.v1.invoice.InvoiceV1;
 import de.invees.portal.common.model.v1.order.ContractUpgradeV1;
 import de.invees.portal.common.model.v1.order.OrderV1;
 import de.invees.portal.common.model.v1.user.UserV1;
+import de.invees.portal.common.nats.NatsProvider;
+import de.invees.portal.common.nats.Subject;
+import de.invees.portal.common.nats.message.processing.UpgradeContractMessage;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.ContractUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
@@ -94,11 +97,17 @@ public class ContractController extends Controller {
         || contract.getStatus() == ContractStatusV1.CANCELED) {
       throw new InputException("CONTRACT_IS_COMPLETED");
     }
-    ContractUtils.applyUpgradeToContract(contract, List.of(new ContractUpgradeV1("ipv4", 1)));
-    InvoiceV1 invoice = ContractUtils.createByUpgrades(contract, List.of(new ContractUpgradeV1("ipv4", 1)));
+    List<ContractUpgradeV1> upgrades = new ArrayList<>();
+    for (JsonElement ele : body.get("upgrades").getAsJsonArray()) {
+      upgrades.add(GsonUtils.GSON.fromJson(ele, ContractUpgradeV1.class));
+    }
+
+    ContractUtils.applyUpgradeToContract(contract, upgrades);
+    InvoiceV1 invoice = ContractUtils.createByUpgrades(contract, upgrades);
     invoiceDataSource().create(invoice);
     contractDataSource().update(contract);
-    // TODO: Send Upgrade NATS Message for Worker to add IPv4 Address
+    ProviderRegistry.access(NatsProvider.class)
+        .send(Subject.PROCESSING, new UpgradeContractMessage(contract.getId(), upgrades));
 
     return GsonUtils.GSON.toJson(contract);
   }

@@ -1,19 +1,20 @@
 package de.invees.portal.core.controller.v1.section;
 
-import de.invees.portal.common.exception.InputException;
-import de.invees.portal.common.model.v1.product.ProductV1;
-import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.ProductDataSourceV1;
 import de.invees.portal.common.datasource.mongodb.v1.SectionDataSourceV1;
+import de.invees.portal.common.exception.InputException;
+import de.invees.portal.common.model.v1.product.ProductV1;
 import de.invees.portal.common.model.v1.section.SectionV1;
+import de.invees.portal.common.utils.gson.GsonUtils;
+import de.invees.portal.common.utils.provider.LazyLoad;
+import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
 
 import static spark.Spark.get;
 
-public class SectionController {
+public class SectionController extends Controller {
 
   private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 

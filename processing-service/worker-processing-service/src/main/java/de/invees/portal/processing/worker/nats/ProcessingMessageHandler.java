@@ -1,6 +1,10 @@
 package de.invees.portal.processing.worker.nats;
 
+import com.mongodb.client.model.Filters;
+import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
 import de.invees.portal.common.model.v1.service.ServiceTypeV1;
+import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.worker.ProcessingWorkerV1;
 import de.invees.portal.common.nats.MessageHandler;
 import de.invees.portal.common.nats.NatsProvider;
@@ -26,6 +30,8 @@ public class ProcessingMessageHandler implements MessageHandler {
       execHandle((MasterStartedMessage) message);
     } else if (message instanceof ExecuteOrderMessage) {
       execHandle((ExecuteOrderMessage) message);
+    } else if (message instanceof UpgradeContractMessage) {
+      execHandle((UpgradeContractMessage) message);
     }
   }
 
@@ -49,4 +55,18 @@ public class ProcessingMessageHandler implements MessageHandler {
     }
     ProviderRegistry.access(ServiceProvider.class).create(message.getContract());
   }
+
+  private void execHandle(UpgradeContractMessage message) {
+    ServiceV1 service = serviceDataSource()
+        .getCollection()
+        .find(Filters.eq(ServiceV1.CONTRACT, message.getContract()))
+        .map(d -> serviceDataSource().map(d, ServiceV1.class))
+        .first();
+    ProviderRegistry.access(ServiceProvider.class).applyUpgrade(service.getId(), message.getUpgrades());
+  }
+
+  private ServiceDataSourceV1 serviceDataSource() {
+    return ProviderRegistry.access(DataSourceProvider.class).access(ServiceDataSourceV1.class);
+  }
+
 }

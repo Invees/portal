@@ -49,7 +49,7 @@ public class ContractUtils {
     double price = 0;
 
     for (ContractUpgradeV1 upgrade : upgrades) {
-      price += calculateSubPosition(product, section, upgrade.getKey(), upgrade.getValue(), positions, daysLeft);
+      price += calculateSubPosition(section, upgrade.getKey(), upgrade.getValue(), positions, daysLeft);
     }
 
     InvoiceV1 invoice = new InvoiceV1(
@@ -193,7 +193,7 @@ public class ContractUtils {
 
     List<InvoicePositionV1> subPositions = new ArrayList<>();
     for (Map.Entry<String, Object> entry : order.getConfiguration().entrySet()) {
-      price += calculateSubPosition(product, section, entry.getKey(), entry.getValue(), subPositions, order.getPaymentInterval());
+      price += calculateSubPosition(section, entry.getKey(), entry.getValue(), subPositions, order.getPaymentInterval());
     }
 
     OneOffProductPriceV1 oneOffPrice = getOneOffPrice(product, order.getContractTerm());
@@ -240,7 +240,8 @@ public class ContractUtils {
     return price;
   }
 
-  private static double calculateSubPosition(ProductV1 product, SectionV1 section, String key, Object value, List<InvoicePositionV1> subPositions, long paymentDays) {
+  private static double calculateSubPosition(SectionV1 section, String key, Object value, List<InvoicePositionV1> subPositions,
+                                             long paymentDays) {
     subPositions.add(new InvoicePositionV1(
         getConfigurationEntry(section, key).getDisplayName(),
         getEntryOption(section, key, value).getDisplayValue(),
