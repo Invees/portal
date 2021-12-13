@@ -3,10 +3,6 @@ package de.invees.portal.core.controller.v1.service;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
-import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.NetworkAddressDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.LockedServiceException;
 import de.invees.portal.common.exception.UnauthorizedException;
@@ -19,9 +15,6 @@ import de.invees.portal.common.model.v1.service.status.ServiceStatusV1;
 import de.invees.portal.common.model.v1.user.UserNameDetailsV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.provider.LazyLoad;
-import de.invees.portal.common.utils.provider.ProviderRegistry;
-import de.invees.portal.core.service.ServiceProvider;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
@@ -35,8 +28,6 @@ import static spark.Spark.post;
 
 public class ServiceController extends Controller {
 
-  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
-
   public ServiceController() {
     get("/v1/service/:service/", this::getService);
     get("/v1/service/:service/owner/", this::getOwner);
@@ -48,7 +39,12 @@ public class ServiceController extends Controller {
   }
 
   private Object execute(Request req, Response resp) {
-    ServiceV1 service = service(serviceDataSource(), req);
+    ServiceV1 service = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        ServiceV1.class,
+        false
+    );
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -73,7 +69,12 @@ public class ServiceController extends Controller {
   }
 
   private Object createConsole(Request req, Response resp) {
-    ServiceV1 service = service(serviceDataSource(), req);
+    ServiceV1 service = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        ServiceV1.class,
+        false
+    );
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -99,21 +100,31 @@ public class ServiceController extends Controller {
   }
 
   private Object getOwner(Request req, Response resp) {
-    ServiceV1 service = service(serviceDataSource(), req);
+    ServiceV1 service = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        ServiceV1.class,
+        false
+    );
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
     if (service.isDeleted()) {
       throw new InputException("SERVICE_IS_DELETED");
     }
-    UserNameDetailsV1 details = userDataSource().byId(service.getBelongsTo(), UserNameDetailsV1.class);
+    UserNameDetailsV1 details = userDataSourceV1().byId(service.getBelongsTo(), UserNameDetailsV1.class);
     return GsonUtils.GSON.toJson(
         details
     );
   }
 
   private Object getNetwork(Request req, Response resp) {
-    ServiceV1 service = service(serviceDataSource(), req);
+    ServiceV1 service = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        ServiceV1.class,
+        false
+    );
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -121,12 +132,17 @@ public class ServiceController extends Controller {
       throw new InputException("SERVICE_IS_DELETED");
     }
     return GsonUtils.GSON.toJson(
-        networkAddressDataSource().getAddressesOfService(service.getId())
+        networkAddressDataSourceV1().getAddressesOfService(service.getId())
     );
   }
 
   private Object getStatus(Request req, Response resp) {
-    ServiceV1 service = service(serviceDataSource(), req);
+    ServiceV1 service = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        ServiceV1.class,
+        false
+    );
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -148,8 +164,18 @@ public class ServiceController extends Controller {
   }
 
   private Object getService(Request req, Response resp) {
-    ServiceV1 service = service(serviceDataSource(), req);
-    DisplayServiceV1 displayService = displayService(serviceDataSource(), req);
+    ServiceV1 service = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        ServiceV1.class,
+        false
+    );
+    DisplayServiceV1 displayService = resource(
+        serviceDataSourceV1(),
+        req.params("service"),
+        DisplayServiceV1.class,
+        false
+    );
     if (!isSameUser(req, service.getBelongsTo())) {
       throw new UnauthorizedException();
     }
@@ -168,7 +194,7 @@ public class ServiceController extends Controller {
     }
     return GsonUtils.GSON.toJson(
         list(
-            serviceDataSource(),
+            serviceDataSourceV1(),
             req,
             DisplayServiceV1.class,
             Filters.and(
@@ -179,19 +205,4 @@ public class ServiceController extends Controller {
     );
   }
 
-  private ServiceDataSourceV1 serviceDataSource() {
-    return this.connection.get().access(ServiceDataSourceV1.class);
-  }
-
-  private UserDataSourceV1 userDataSource() {
-    return this.connection.get().access(UserDataSourceV1.class);
-  }
-
-  private ServiceProvider serviceProvider() {
-    return ProviderRegistry.access(ServiceProvider.class);
-  }
-
-  private NetworkAddressDataSourceV1 networkAddressDataSource() {
-    return this.connection.get().access(NetworkAddressDataSourceV1.class);
-  }
 }

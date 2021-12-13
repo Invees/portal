@@ -2,9 +2,6 @@ package de.invees.portal.core.controller.v1.user;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.UserAuthenticationDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.UserDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.exception.UserCreationException;
 import de.invees.portal.common.model.v1.user.UserV1;
@@ -13,9 +10,9 @@ import de.invees.portal.common.model.v1.user.UserAuthenticationTypeV1;
 import de.invees.portal.common.model.v1.user.UserDetailsV1;
 import de.invees.portal.common.utils.InputUtils;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.security.SecurityUtils;
 import de.invees.portal.core.utils.CoreTokenUtils;
+import de.invees.portal.core.utils.controller.Controller;
 import spark.Request;
 import spark.Response;
 
@@ -26,9 +23,7 @@ import java.util.UUID;
 import static spark.Spark.get;
 import static spark.Spark.post;
 
-public class UserController {
-
-  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
+public class UserController extends Controller {
 
   public UserController() {
     get("/v1/user/", this::localUser);
@@ -83,8 +78,8 @@ public class UserController {
     }
     String salt = SecurityUtils.generateSalt(40);
 
-    userDataSource().createDisplayUser(user);
-    userAuthenticationDataSource().create(new UserAuthenticationV1(
+    userDataSourceV1().createDisplayUser(user);
+    userAuthenticationDataSourceV1().create(new UserAuthenticationV1(
         UUID.randomUUID(),
         user.getId(),
         UserAuthenticationTypeV1.PASSWORD,
@@ -108,12 +103,12 @@ public class UserController {
 
     String email = body.get("email").getAsString();
     String password = body.get("password").getAsString();
-    UserV1 user = userDataSource().byEmail(email, UserV1.class);
+    UserV1 user = userDataSourceV1().byEmail(email, UserV1.class);
     if (user == null) {
       throw new UnauthorizedException("INVALID_USER_PASSWORD");
     }
 
-    List<UserAuthenticationV1> authentications = userAuthenticationDataSource().byUser(
+    List<UserAuthenticationV1> authentications = userAuthenticationDataSourceV1().byUser(
         user.getId(),
         UserAuthenticationTypeV1.PASSWORD,
         UserAuthenticationV1.class
@@ -133,18 +128,10 @@ public class UserController {
                 "expiryTime", expiryTime
             )
         );
-        userAuthenticationDataSource().create(tokenAuthentication);
+        userAuthenticationDataSourceV1().create(tokenAuthentication);
         return token;
       }
     }
     throw new UnauthorizedException("INVALID_USER_PASSWORD");
-  }
-
-  private UserDataSourceV1 userDataSource() {
-    return connection.get().access(UserDataSourceV1.class);
-  }
-
-  private UserAuthenticationDataSourceV1 userAuthenticationDataSource() {
-    return connection.get().access(UserAuthenticationDataSourceV1.class);
   }
 }

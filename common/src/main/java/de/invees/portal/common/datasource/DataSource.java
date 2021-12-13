@@ -10,7 +10,6 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import de.invees.portal.common.datasource.response.PagedResponse;
 import de.invees.portal.common.model.Model;
-import de.invees.portal.common.model.Model;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -80,7 +79,7 @@ public interface DataSource<T> {
     return this.list(type, listFilter(), null);
   }
 
-  default <Y extends Model> PagedResponse<Y> listPaged(int skip, int limit, Class<Y> type, Bson customFilters, Bson sort) {
+  default <Y extends Model> PagedResponse<Y> listPaged(long skip, long limit, Class<Y> type, Bson customFilters, Bson sort) {
     FindIterable<Document> iterable;
     if (customFilters != null) {
       iterable = this.getCollection().find(customFilters);
@@ -94,8 +93,8 @@ public interface DataSource<T> {
         this.getCollection().countDocuments(customFilters),
         wrapped(iterable
             .sort(sort)
-            .skip(skip)
-            .limit(limit), type)
+            .skip(((Long) skip).intValue())
+            .limit(((Long) limit).intValue()), type)
             .into(new ArrayList<>())
     );
   }

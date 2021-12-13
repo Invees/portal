@@ -4,13 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.GatewayDataDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceFileDataSourceV1;
 import de.invees.portal.common.exception.UnauthorizedException;
-import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
 import de.invees.portal.common.model.v1.contract.ContractV1;
 import de.invees.portal.common.model.v1.gateway.GatewayDataTypeV1;
@@ -23,7 +17,6 @@ import de.invees.portal.common.nats.NatsProvider;
 import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.payment.PaymentMessage;
 import de.invees.portal.common.utils.gson.GsonUtils;
-import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.Application;
 import de.invees.portal.core.utils.CoreTokenUtils;
@@ -42,8 +35,6 @@ import static spark.Spark.post;
 
 public class InvoiceController extends Controller {
 
-  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
-
   public InvoiceController() {
     get("/v1/invoice/", this::list);
     get("/v1/invoice/:invoice/", this::getInvoice);
@@ -53,7 +44,12 @@ public class InvoiceController extends Controller {
   }
 
   private Object capturePaymentData(Request req, Response resp) throws IOException {
-    InvoiceV1 invoice = invoice(invoiceDataSource(), req);
+    InvoiceV1 invoice = resource(
+        invoiceDataSourceV1(),
+        req.params("invoice"),
+        InvoiceV1.class,
+        true
+    );
     if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -73,16 +69,16 @@ public class InvoiceController extends Controller {
     if (orderResponse.status().equalsIgnoreCase("COMPLETED")) {
       invoice.setStatus(InvoiceStatusV1.PAID);
       invoice.setPaidAt(System.currentTimeMillis());
-      invoiceDataSource().update(invoice);
+      invoiceDataSourceV1().update(invoice);
 
-      gatewayDataSource().create(new GatewayDataV1(
+      gatewayDataSourceV1().create(new GatewayDataV1(
           UUID.randomUUID(),
           GatewayDataTypeV1.PAYPAL,
           orderResponse
       ));
       List<ContractV1> contracts = new ArrayList<>();
       for (long contract : invoice.getContractList()) {
-        contracts.add(contractDataSource().byId(contract, ContractV1.class));
+        contracts.add(contractDataSourceV1().byId(contract, ContractV1.class));
       }
 
       for (ContractV1 contract : contracts) {
@@ -90,7 +86,7 @@ public class InvoiceController extends Controller {
           continue;
         }
         contract.setStatus(ContractStatusV1.PROCESSING);
-        contractDataSource().update(contract);
+        contractDataSourceV1().update(contract);
       }
 
       ProviderRegistry.access(NatsProvider.class).send(Subject.PAYMENT, new PaymentMessage(invoice.getId()));
@@ -99,7 +95,12 @@ public class InvoiceController extends Controller {
   }
 
   private Object getPaymentData(Request req, Response resp) throws IOException {
-    InvoiceV1 invoice = invoice(invoiceDataSource(), req);
+    InvoiceV1 invoice = resource(
+        invoiceDataSourceV1(),
+        req.params("invoice"),
+        InvoiceV1.class,
+        true
+    );
     if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -109,7 +110,12 @@ public class InvoiceController extends Controller {
   }
 
   private Object getInvoice(Request req, Response resp) {
-    InvoiceV1 invoice = invoice(invoiceDataSource(), req);
+    InvoiceV1 invoice = resource(
+        invoiceDataSourceV1(),
+        req.params("invoice"),
+        InvoiceV1.class,
+        true
+    );
     if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -119,11 +125,16 @@ public class InvoiceController extends Controller {
   }
 
   private Object getFile(Request req, Response resp) throws IOException {
-    InvoiceV1 invoice = invoice(invoiceDataSource(), req);
+    InvoiceV1 invoice = resource(
+        invoiceDataSourceV1(),
+        req.params("invoice"),
+        InvoiceV1.class,
+        true
+    );
     if (!isSameUser(req, invoice.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    byte[] data = invoiceFileDataSource().byId(invoice.getId(), InvoiceFileV1.class).getData();
+    byte[] data = invoiceFileDataSourceV1().byId(invoice.getId(), InvoiceFileV1.class).getData();
 
     resp.header("Content-Disposition", String.format("attachment; filename=\"%s.pdf\"", "invoice-" + invoice.getId()));
     resp.type("OCTET_STREAM");
@@ -149,7 +160,7 @@ public class InvoiceController extends Controller {
 
     return GsonUtils.GSON.toJson(
         list(
-            invoiceDataSource(),
+            invoiceDataSourceV1(),
             req,
             InvoiceV1.class,
             Filters.and(filters),
@@ -157,25 +168,4 @@ public class InvoiceController extends Controller {
         )
     );
   }
-
-  private ContractDataSourceV1 contractDataSource() {
-    return this.connection.get().access(ContractDataSourceV1.class);
-  }
-
-  private InvoiceDataSourceV1 invoiceDataSource() {
-    return this.connection.get().access(InvoiceDataSourceV1.class);
-  }
-
-  private InvoiceFileDataSourceV1 invoiceFileDataSource() {
-    return this.connection.get().access(InvoiceFileDataSourceV1.class);
-  }
-
-  private GatewayDataDataSourceV1 gatewayDataSource() {
-    return this.connection.get().access(GatewayDataDataSourceV1.class);
-  }
-
-  private PayPalGatewayProvider payPalGateway() {
-    return ProviderRegistry.access(PayPalGatewayProvider.class);
-  }
-
 }

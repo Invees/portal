@@ -1,10 +1,12 @@
 package de.invees.portal.core.controller.v1.service.software;
 
-import com.google.gson.JsonObject;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
 import de.invees.portal.common.datasource.mongodb.v1.SoftwareDataSourceV1;
+import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
+import de.invees.portal.common.model.v1.service.ServiceTypeV1;
+import de.invees.portal.common.model.v1.service.software.ServiceSoftwareTypeV1;
 import de.invees.portal.common.model.v1.service.software.ServiceSoftwareV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
@@ -23,7 +25,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.UUID;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
@@ -40,37 +42,45 @@ public class ServiceSoftwareController extends Controller {
   }
 
   public Object create(Request req, Response resp) {
+    UserV1 user = CoreTokenUtils.parseToken(req);
+    if (user == null) {
+      throw new UnauthorizedException();
+    }
+    UUID softwareId = UUID.randomUUID();
     try {
       File directory = new File(configuration.getSoftwareDirectory(), "template/iso");
       MultipartConfigElement multipartConfigElement = new MultipartConfigElement(
           directory.getAbsolutePath(),
           4 * 1024 * 1024 * 1024,
           5 * 1024 * 1024 * 1024,
-          1024
+          1024 * 8
       );
       req.raw().setAttribute("org.eclipse.jetty.multipartConfig", multipartConfigElement);
-
-      Collection<Part> parts = req.raw().getParts();
-      for (Part part : parts) {
-        System.out.println("Name: " + part.getName());
-        System.out.println("Size: " + part.getSize());
-        System.out.println("Filename: " + part.getSubmittedFileName());
-      }
-
-      String fName = req.raw().getPart("file").getSubmittedFileName();
-      System.out.println("Title: " + req.raw().getParameter("title"));
-      System.out.println("File: " + fName);
-
       Part uploadedFile = req.raw().getPart("file");
-      Path out = Paths.get(directory.getAbsolutePath() + "/test.iso");
-      try (InputStream in = uploadedFile.getInputStream()) {
-        Files.copy(in, out);
-        uploadedFile.delete();
+      String name = uploadedFile.getSubmittedFileName();
+
+      // ISO = Mountable / Virtual Server
+      if (name.endsWith(".iso")) {
+        Path out = Paths.get(directory.getAbsolutePath() + "/" + softwareId + ".iso");
+        try (InputStream in = uploadedFile.getInputStream()) {
+          Files.copy(in, out);
+          uploadedFile.delete();
+        }
+        ServiceSoftwareV1 software = new ServiceSoftwareV1(
+            softwareId,
+            name,
+            ServiceTypeV1.VIRTUAL_SERVER,
+            ServiceSoftwareTypeV1.MOUNTABLE,
+            user.getId()
+        );
+        softwareDataSource().create(software);
+        return GsonUtils.toJson(software);
       }
-      return GsonUtils.toJson(new JsonObject());
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+
+    throw new InputException("INVALID_FILE_TYPE");
   }
 
   public Object list(Request req, Response resp) {

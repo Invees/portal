@@ -5,10 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.ContractCancellationDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.contract.ContractStatusV1;
@@ -25,7 +21,6 @@ import de.invees.portal.common.nats.Subject;
 import de.invees.portal.common.nats.message.processing.UpgradeContractMessage;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.invoice.ContractUtils;
-import de.invees.portal.common.utils.provider.LazyLoad;
 import de.invees.portal.common.utils.provider.ProviderRegistry;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
@@ -42,8 +37,6 @@ import static spark.Spark.post;
 
 public class ContractController extends Controller {
 
-  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
-
   public ContractController() {
     get("/v1/contract/:contract/", this::getContract);
     get("/v1/contract/", this::list);
@@ -55,7 +48,12 @@ public class ContractController extends Controller {
   }
 
   private Object getContract(Request req, Response res) {
-    ContractV1 contract = contract(contractDataSource(), req);
+    ContractV1 contract = resource(
+        contractDataSourceV1(),
+        req.params("contract"),
+        ContractV1.class,
+        true
+    );
     if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -69,7 +67,7 @@ public class ContractController extends Controller {
     }
     return GsonUtils.GSON.toJson(
         list(
-            contractDataSource(),
+            contractDataSourceV1(),
             req,
             PrototypeContractV1.class,
             Filters.eq(ContractV1.BELONGS_TO, user.getId().toString()),
@@ -89,7 +87,12 @@ public class ContractController extends Controller {
 
   private Object upgrade(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    ContractV1 contract = contract(contractDataSource(), req);
+    ContractV1 contract = resource(
+        contractDataSourceV1(),
+        req.params("contract"),
+        ContractV1.class,
+        true
+    );
     if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -104,8 +107,8 @@ public class ContractController extends Controller {
 
     ContractUtils.applyUpgradeToContract(contract, upgrades);
     InvoiceV1 invoice = ContractUtils.createByUpgrades(contract, upgrades);
-    invoiceDataSource().create(invoice);
-    contractDataSource().update(contract);
+    invoiceDataSourceV1().create(invoice);
+    contractDataSourceV1().update(contract);
     ProviderRegistry.access(NatsProvider.class)
         .send(Subject.PROCESSING, new UpgradeContractMessage(contract.getId(), upgrades));
 
@@ -114,7 +117,12 @@ public class ContractController extends Controller {
 
   private Object cancel(Request req, Response resp) {
     JsonObject body = JsonParser.parseString(req.body()).getAsJsonObject();
-    ContractV1 contract = contract(contractDataSource(), req);
+    ContractV1 contract = resource(
+        contractDataSourceV1(),
+        req.params("contract"),
+        ContractV1.class,
+        true
+    );
     if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
@@ -135,16 +143,21 @@ public class ContractController extends Controller {
         nextPaymentDate,
         body.get("cancel").getAsBoolean()
     );
-    contractCancellationDataSource().create(cancellation);
+    contractCancellationDataSourceV1().create(cancellation);
     return GsonUtils.toJson(cancellation);
   }
 
   private Object getCancel(Request req, Response resp) {
-    ContractV1 contract = contract(contractDataSource(), req);
+    ContractV1 contract = resource(
+        contractDataSourceV1(),
+        req.params("contract"),
+        ContractV1.class,
+        true
+    );
     if (!isSameUser(req, contract.getBelongsTo())) {
       throw new UnauthorizedException("UNAUTHORIZED");
     }
-    return GsonUtils.toJson(contractCancellationDataSource().getLastCancellation(contract.getId()));
+    return GsonUtils.toJson(contractCancellationDataSourceV1().getLastCancellation(contract.getId()));
   }
 
   public Object createContract(Request req, Response resp) {
@@ -162,7 +175,7 @@ public class ContractController extends Controller {
 
     for (OrderV1 order : orders) {
       ContractV1 contract = new ContractV1(
-          contractDataSource().nextSequence(),
+          contractDataSourceV1().nextSequence(),
           user.getId(),
           ContractTypeV1.DEFAULT,
           System.currentTimeMillis(),
@@ -171,22 +184,10 @@ public class ContractController extends Controller {
           -1
       );
       invoice.getContractList().add(contract.getId());
-      contractDataSource().create(contract);
+      contractDataSourceV1().create(contract);
     }
-    invoiceDataSource().create(invoice);
+    invoiceDataSourceV1().create(invoice);
     return GsonUtils.toJson(invoice);
   }
 
-  private ContractDataSourceV1 contractDataSource() {
-    return this.connection.get().access(ContractDataSourceV1.class);
-  }
-
-  private ContractCancellationDataSourceV1 contractCancellationDataSource() {
-    return this.connection.get().access(ContractCancellationDataSourceV1.class);
-  }
-
-  private static InvoiceDataSourceV1 invoiceDataSource() {
-    return ProviderRegistry.access(DataSourceProvider.class)
-        .access(InvoiceDataSourceV1.class);
-  }
 }

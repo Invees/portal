@@ -19,9 +19,9 @@ public class InputUtils {
     return false;
   }
 
-  public static int integerByString(String data, int defaultValue) {
+  public static long longByString(String data, long defaultValue) {
     try {
-      return Integer.valueOf(data);
+      return Long.valueOf(data);
     } catch (Exception e) {
       return defaultValue;
     }

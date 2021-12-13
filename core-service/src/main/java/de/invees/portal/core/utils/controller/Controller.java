@@ -1,17 +1,16 @@
 package de.invees.portal.core.utils.controller;
 
 import de.invees.portal.common.datasource.DataSource;
-import de.invees.portal.common.datasource.mongodb.v1.ContractDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.InvoiceDataSourceV1;
-import de.invees.portal.common.datasource.mongodb.v1.ServiceDataSourceV1;
+import de.invees.portal.common.datasource.DataSourceProvider;
+import de.invees.portal.common.datasource.mongodb.v1.*;
 import de.invees.portal.common.exception.InputException;
+import de.invees.portal.common.gateway.paypal.PayPalGatewayProvider;
 import de.invees.portal.common.model.Model;
-import de.invees.portal.common.model.v1.contract.ContractV1;
-import de.invees.portal.common.model.v1.invoice.InvoiceV1;
-import de.invees.portal.common.model.v1.service.DisplayServiceV1;
-import de.invees.portal.common.model.v1.service.ServiceV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.InputUtils;
+import de.invees.portal.common.utils.provider.LazyLoad;
+import de.invees.portal.common.utils.provider.ProviderRegistry;
+import de.invees.portal.core.service.ServiceProvider;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import org.bson.conversions.Bson;
 import spark.Request;
@@ -19,6 +18,8 @@ import spark.Request;
 import java.util.UUID;
 
 public class Controller {
+
+  private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
 
   public <Y extends Model> Object list(DataSource dataSource, Request req, Class<Y> type) {
     return list(dataSource, req, null);
@@ -30,8 +31,8 @@ public class Controller {
 
   public <Y extends Model> Object list(DataSource dataSource, Request req, Class<Y> type, Bson filter, Bson sort) {
     if (hasLimitOrSkip(req)) {
-      int skip = InputUtils.integerByString(req.queryParams("skip"), 0);
-      int limit = InputUtils.integerByString(req.queryParams("limit"), 10);
+      long skip = InputUtils.longByString(req.queryParams("skip"), 0);
+      long limit = InputUtils.longByString(req.queryParams("limit"), 10);
       return dataSource.listPaged(skip, limit, type, filter, sort);
     }
     return dataSource.list(type, filter);
@@ -49,47 +50,69 @@ public class Controller {
     return userId.equals(user.getId());
   }
 
-  // Contract
-  public ContractV1 contract(ContractDataSourceV1 dataSource, Request req) {
-    ContractV1 contract = dataSource.byId(
-        Integer.valueOf(req.params("contract")), ContractV1.class
-    );
-    if (contract == null) {
-      throw new InputException("CONTRACT_NOT_FOUND");
+  protected <T extends Model> T resource(DataSource<?> dataSource, String id, Class<T> type, boolean numericId) {
+    T model;
+    if (numericId) {
+      model = dataSource.byId(InputUtils.longByString(id, -1), type);
+    } else {
+      model = dataSource.byId(id, type);
     }
-    return contract;
+    if (model == null) {
+      throw new InputException("RESOURCE_NOT_FOUND");
+    }
+    return model;
   }
 
-  // Invoice
-  public InvoiceV1 invoice(InvoiceDataSourceV1 dataSource, Request req) {
-    InvoiceV1 invoice = dataSource.byId(
-        InputUtils.integerByString(req.params("invoice"), -1), InvoiceV1.class
-    );
-    if (invoice == null) {
-      throw new InputException("INVOICE_NOT_FOUND");
-    }
-    return invoice;
+  // DataSource
+  protected ContractDataSourceV1 contractDataSourceV1() {
+    return this.connection.get().access(ContractDataSourceV1.class);
   }
 
-  // Service
-  public DisplayServiceV1 displayService(ServiceDataSourceV1 dataSource, Request req) {
-    DisplayServiceV1 service = dataSource.byId(
-        UUID.fromString(req.params("service")), DisplayServiceV1.class
-    );
-    if (service == null) {
-      throw new InputException("SERVICE__NOT_FOUND");
-    }
-    return service;
+  protected ContractCancellationDataSourceV1 contractCancellationDataSourceV1() {
+    return this.connection.get().access(ContractCancellationDataSourceV1.class);
   }
 
-  public ServiceV1 service(ServiceDataSourceV1 dataSource, Request req) {
-    ServiceV1 service = dataSource.byId(
-        UUID.fromString(req.params("service")), ServiceV1.class
-    );
-    if (service == null) {
-      throw new InputException("SERVICE__NOT_FOUND");
-    }
-    return service;
+  protected InvoiceDataSourceV1 invoiceDataSourceV1() {
+    return this.connection.get().access(InvoiceDataSourceV1.class);
   }
 
+  protected InvoiceFileDataSourceV1 invoiceFileDataSourceV1() {
+    return this.connection.get().access(InvoiceFileDataSourceV1.class);
+  }
+
+  protected GatewayDataDataSourceV1 gatewayDataSourceV1() {
+    return this.connection.get().access(GatewayDataDataSourceV1.class);
+  }
+
+  protected PayPalGatewayProvider payPalGateway() {
+    return ProviderRegistry.access(PayPalGatewayProvider.class);
+  }
+
+  protected ProductDataSourceV1 productDataSourceV1() {
+    return this.connection.get().access(ProductDataSourceV1.class);
+  }
+
+  protected ServiceDataSourceV1 serviceDataSourceV1() {
+    return this.connection.get().access(ServiceDataSourceV1.class);
+  }
+
+  protected ServiceProvider serviceProvider() {
+    return ProviderRegistry.access(ServiceProvider.class);
+  }
+
+  protected NetworkAddressDataSourceV1 networkAddressDataSourceV1() {
+    return this.connection.get().access(NetworkAddressDataSourceV1.class);
+  }
+
+  protected SectionDataSourceV1 sectionDataSourceV1() {
+    return connection.get().access(SectionDataSourceV1.class);
+  }
+
+  protected UserDataSourceV1 userDataSourceV1() {
+    return connection.get().access(UserDataSourceV1.class);
+  }
+
+  protected UserAuthenticationDataSourceV1 userAuthenticationDataSourceV1() {
+    return connection.get().access(UserAuthenticationDataSourceV1.class);
+  }
 }
