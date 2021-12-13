@@ -9,6 +9,7 @@ import de.invees.portal.common.model.v1.service.software.ServiceSoftwareV1;
 import de.invees.portal.common.model.v1.user.UserV1;
 import de.invees.portal.common.utils.gson.GsonUtils;
 import de.invees.portal.common.utils.provider.LazyLoad;
+import de.invees.portal.core.configuration.Configuration;
 import de.invees.portal.core.utils.CoreTokenUtils;
 import de.invees.portal.core.utils.controller.Controller;
 import org.bson.BsonNull;
@@ -17,6 +18,7 @@ import spark.Response;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,23 +31,24 @@ import static spark.Spark.post;
 public class ServiceSoftwareController extends Controller {
 
   private final LazyLoad<DataSourceProvider> connection = new LazyLoad<>(DataSourceProvider.class);
+  private final Configuration configuration;
 
-  public ServiceSoftwareController() {
+  public ServiceSoftwareController(Configuration configuration) {
+    this.configuration = configuration;
     get("/v1/software/", this::list);
     post("/v1/software/", this::create);
   }
 
   public Object create(Request req, Response resp) {
     try {
-      String location = "image";          // the directory location where files will be stored
-      long maxFileSize = 100000000;       // the maximum size allowed for uploaded files
-      long maxRequestSize = 100000000;    // the maximum size allowed for multipart/form-data requests
-      int fileSizeThreshold = 1024;       // the size threshold after which files will be written to disk
-
+      File directory = new File(configuration.getSoftwareDirectory(), "template/iso");
       MultipartConfigElement multipartConfigElement = new MultipartConfigElement(
-          location, maxFileSize, maxRequestSize, fileSizeThreshold);
-      req.raw().setAttribute("org.eclipse.jetty.multipartConfig",
-          multipartConfigElement);
+          directory.getAbsolutePath(),
+          4 * 1024 * 1024 * 1024,
+          5 * 1024 * 1024 * 1024,
+          1024
+      );
+      req.raw().setAttribute("org.eclipse.jetty.multipartConfig", multipartConfigElement);
 
       Collection<Part> parts = req.raw().getParts();
       for (Part part : parts) {
@@ -59,7 +62,7 @@ public class ServiceSoftwareController extends Controller {
       System.out.println("File: " + fName);
 
       Part uploadedFile = req.raw().getPart("file");
-      Path out = Paths.get("image/" + fName);
+      Path out = Paths.get(directory.getAbsolutePath() + "/test.iso");
       try (InputStream in = uploadedFile.getInputStream()) {
         Files.copy(in, out);
         uploadedFile.delete();

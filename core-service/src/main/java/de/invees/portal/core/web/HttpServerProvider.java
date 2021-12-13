@@ -6,8 +6,8 @@ import de.invees.portal.common.exception.*;
 import de.invees.portal.common.utils.provider.Provider;
 import de.invees.portal.core.Application;
 import de.invees.portal.core.configuration.Configuration;
-import de.invees.portal.core.controller.v1.invoice.InvoiceController;
 import de.invees.portal.core.controller.v1.contract.ContractController;
+import de.invees.portal.core.controller.v1.invoice.InvoiceController;
 import de.invees.portal.core.controller.v1.product.ProductController;
 import de.invees.portal.core.controller.v1.section.SectionController;
 import de.invees.portal.core.controller.v1.service.ServiceController;
@@ -29,8 +29,10 @@ public class HttpServerProvider implements Provider {
       ServiceSoftwareController.class,
       ServiceController.class
   );
+  private final Configuration configuration;
 
   public HttpServerProvider(Configuration configuration) {
+    this.configuration = configuration;
     Application.LOGGER.info("Starting HttpServer on [:]:" + configuration.getPort());
     port(configuration.getPort());
     before((request, response) -> response.type("application/json;charset=UTF-8"));
@@ -93,6 +95,12 @@ public class HttpServerProvider implements Provider {
       try {
         Application.LOGGER.info("Loading " + controller.getSimpleName());
         controller.getConstructor().newInstance();
+      } catch (NoSuchMethodException e) {
+        try {
+          controller.getConstructor(Configuration.class).newInstance(configuration);
+        } catch (Exception e2) {
+          Application.LOGGER.error("Error while loading controller " + controller.getSimpleName(), e2);
+        }
       } catch (Exception e) {
         Application.LOGGER.error("Error while loading controller " + controller.getSimpleName(), e);
       }
