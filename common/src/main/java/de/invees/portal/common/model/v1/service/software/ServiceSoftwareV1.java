@@ -17,6 +17,7 @@ public class ServiceSoftwareV1 implements Model {
   public static String SERVICE_TYPE = "serviceType";
   public static String TYPE = "type";
   public static String BELONGS_TO = "belongsTo";
+  public static String CREATED_AT = "createdAt";
 
   @SerializedName("_id")
   private UUID id;
@@ -24,10 +25,11 @@ public class ServiceSoftwareV1 implements Model {
   private ServiceTypeV1 serviceType;
   private ServiceSoftwareTypeV1 type;
   private UUID belongsTo;
+  private long createdAt;
 
   public static String[] projection() {
     return new String[]{
-        ID, NAME, SERVICE_TYPE, TYPE, BELONGS_TO
+        ID, NAME, SERVICE_TYPE, TYPE, BELONGS_TO, CREATED_AT
     };
   }
 }

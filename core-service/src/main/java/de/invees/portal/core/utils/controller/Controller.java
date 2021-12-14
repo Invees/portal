@@ -47,6 +47,9 @@ public class Controller {
     if (user == null) {
       return false;
     }
+    if (userId == null) {
+      return false;
+    }
     return userId.equals(user.getId());
   }
 
@@ -114,5 +117,9 @@ public class Controller {
 
   protected UserAuthenticationDataSourceV1 userAuthenticationDataSourceV1() {
     return connection.get().access(UserAuthenticationDataSourceV1.class);
+  }
+
+  protected SoftwareDataSourceV1 softwareDataSourceV1() {
+    return this.connection.get().access(SoftwareDataSourceV1.class);
   }
 }

@@ -44,6 +44,10 @@ public class HttpServerProvider implements Provider {
         "Access-Control-Allow-Headers",
         configuration.getAccessControlAllowHeaders()
     ));
+    before((request, response) -> response.header(
+        "Access-Control-Allow-Methods",
+        "*"
+    ));
 
     notFound((request, response) -> {
       JsonObject body = new JsonObject();
@@ -55,6 +59,7 @@ public class HttpServerProvider implements Provider {
       JsonObject body = new JsonObject();
       body.addProperty("result", "success");
       body.addProperty("responseTime", System.currentTimeMillis());
+      System.out.println(response.body());
       if (response.body() == null) {
         body.addProperty("result", "error");
         body.addProperty("message", "Endpoint not found.");

@@ -1,8 +1,9 @@
 package de.invees.portal.core.controller.v1.service.software;
 
+import com.google.gson.JsonObject;
+import com.itextpdf.io.util.FileUtil;
 import com.mongodb.client.model.Filters;
 import de.invees.portal.common.datasource.DataSourceProvider;
-import de.invees.portal.common.datasource.mongodb.v1.SoftwareDataSourceV1;
 import de.invees.portal.common.exception.InputException;
 import de.invees.portal.common.exception.UnauthorizedException;
 import de.invees.portal.common.model.v1.service.ServiceTypeV1;
@@ -27,8 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-import static spark.Spark.get;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 public class ServiceSoftwareController extends Controller {
 
@@ -39,6 +39,22 @@ public class ServiceSoftwareController extends Controller {
     this.configuration = configuration;
     get("/v1/software/", this::list);
     post("/v1/software/", this::create);
+    delete("/v1/software/:software/", this::deleteSoftware);
+  }
+
+  public Object deleteSoftware(Request req, Response resp) {
+    ServiceSoftwareV1 software = softwareDataSourceV1().byId(req.params("software"), ServiceSoftwareV1.class);
+    if (!isSameUser(req, software.getBelongsTo())) {
+      throw new UnauthorizedException();
+    }
+    File directory = new File(configuration.getSoftwareDirectory(), "template/iso");
+    softwareDataSourceV1().getCollection()
+        .deleteOne(Filters.eq(ServiceSoftwareV1.ID, software.getId().toString()));
+    if (software.getName().endsWith(".iso")) {
+      File iso = new File(directory.getAbsolutePath() + "/" + software.getId() + ".iso");
+      FileUtil.deleteFile(iso);
+    }
+    return new JsonObject().toString();
   }
 
   public Object create(Request req, Response resp) {
@@ -71,9 +87,10 @@ public class ServiceSoftwareController extends Controller {
             name,
             ServiceTypeV1.VIRTUAL_SERVER,
             ServiceSoftwareTypeV1.MOUNTABLE,
-            user.getId()
+            user.getId(),
+            System.currentTimeMillis()
         );
-        softwareDataSource().create(software);
+        softwareDataSourceV1().create(software);
         return GsonUtils.toJson(software);
       }
     } catch (Exception e) {
@@ -90,7 +107,7 @@ public class ServiceSoftwareController extends Controller {
     }
     return GsonUtils.GSON.toJson(
         list(
-            softwareDataSource(),
+            softwareDataSourceV1(),
             req,
             ServiceSoftwareV1.class,
             Filters.or(
@@ -100,9 +117,4 @@ public class ServiceSoftwareController extends Controller {
         )
     );
   }
-
-  private SoftwareDataSourceV1 softwareDataSource() {
-    return this.connection.get().access(SoftwareDataSourceV1.class);
-  }
-
 }
