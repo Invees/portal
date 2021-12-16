@@ -6,5 +6,7 @@ import lombok.Data;
 public class NatsConfiguration {
 
   private String url;
+  private String user;
+  private String password;
 
 }

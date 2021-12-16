@@ -10,6 +10,7 @@ import de.invees.portal.common.utils.provider.Provider;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Nats;
+import io.nats.client.Options;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -23,7 +24,12 @@ public class NatsProvider implements Provider {
 
   public NatsProvider(NatsConfiguration configuration) {
     try {
-      this.connection = Nats.connect(configuration.getUrl());
+      Options options = new Options.Builder()
+          .server(configuration.getUrl())
+          .userInfo(configuration.getUser(), configuration.getPassword())
+          .build();
+
+      this.connection = Nats.connect(options);
       dispatcher = this.connection.createDispatcher((msg) -> {
         MessageHandler handler = handlerMap.get(msg.getSubject());
         if (handler == null) {
