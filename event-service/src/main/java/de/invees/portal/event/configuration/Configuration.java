@@ -9,6 +9,7 @@ public class Configuration {
 
   private final int port;
   private final String accessControlAllowOrigin;
+  private final String accessControlAllowHeaders;
   private final DataSourceConfiguration dataSource;
   private final NatsConfiguration nats;
 

@@ -20,10 +20,12 @@ public class DefaultServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws  IOException {
     response.getWriter().println("Invees/Event");
     response.setHeader("Access-Control-Allow-Origin", configuration.getAccessControlAllowOrigin());
+    response.setHeader("Access-Control-Allow-Headers", configuration.getAccessControlAllowHeaders());
   }
 
   protected void doOptions(HttpServletRequest request, HttpServletResponse response) {
     response.setHeader("Access-Control-Allow-Origin", configuration.getAccessControlAllowOrigin());
+    response.setHeader("Access-Control-Allow-Headers", configuration.getAccessControlAllowHeaders());
   }
 
 }
