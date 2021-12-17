@@ -17,15 +17,15 @@ public class DefaultServlet extends HttpServlet {
     this.configuration = configuration;
   }
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws  IOException {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     response.getWriter().println("Invees/Event");
     response.setHeader("Access-Control-Allow-Origin", configuration.getAccessControlAllowOrigin());
-    response.setHeader("Access-Control-Allow-Headers", configuration.getAccessControlAllowHeaders());
+    response.setHeader("Access-Control-Allow-Headers", "Authorization, Accept, Host, Upgrade");
   }
 
   protected void doOptions(HttpServletRequest request, HttpServletResponse response) {
     response.setHeader("Access-Control-Allow-Origin", configuration.getAccessControlAllowOrigin());
-    response.setHeader("Access-Control-Allow-Headers", configuration.getAccessControlAllowHeaders());
+    response.setHeader("Access-Control-Allow-Headers", "Authorization, Accept, Host, Upgrade");
   }
 
 }
