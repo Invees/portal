@@ -30,7 +30,7 @@ jobs:
           --tag "ghcr.io/invees/portal/core-service:${GITHUB_REF##*/}" \
           --build-arg GITHUB_SHA="$GITHUB_SHA" \
           --build-arg GITHUB_REF="$GITHUB_REF" \
-          .      
+          .
       # Build the Docker image
     - name: Build "master-processing-service" Docker
       working-directory: ./processing-service/master-processing-service
@@ -39,7 +39,25 @@ jobs:
           --tag "ghcr.io/invees/portal/master-processing-service:${GITHUB_REF##*/}" \
           --build-arg GITHUB_SHA="$GITHUB_SHA" \
           --build-arg GITHUB_REF="$GITHUB_REF" \
-          .           
+          .
+      # Build the Docker image
+    - name: Build "event-service" Docker
+      working-directory: ./event-service
+      run: |-
+        docker build \
+          --tag "ghcr.io/invees/portal/event-service:${GITHUB_REF##*/}" \
+          --build-arg GITHUB_SHA="$GITHUB_SHA" \
+          --build-arg GITHUB_REF="$GITHUB_REF" \
+          .
+      # Build the Docker image
+    - name: Build "invoicing-service" Docker
+      working-directory: ./invoicing-service
+      run: |-
+        docker build \
+          --tag "ghcr.io/invees/portal/invoicing-service:${GITHUB_REF##*/}" \
+          --build-arg GITHUB_SHA="$GITHUB_SHA" \
+          --build-arg GITHUB_REF="$GITHUB_REF" \
+          .
       # Build the Docker image
     - name: Build "worker-processing-service" Docker
       working-directory: ./processing-service/worker-processing-service
@@ -62,6 +80,8 @@ jobs:
         docker push "ghcr.io/invees/portal/core-service:${GITHUB_REF##*/}"
         docker push "ghcr.io/invees/portal/master-processing-service:${GITHUB_REF##*/}"
         docker push "ghcr.io/invees/portal/worker-processing-service:${GITHUB_REF##*/}"
+        docker push "ghcr.io/invees/portal/event-service:${GITHUB_REF##*/}"
+        docker push "ghcr.io/invees/portal/invoicing-service:${GITHUB_REF##*/}"
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
       env:
