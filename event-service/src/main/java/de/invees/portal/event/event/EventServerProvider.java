@@ -7,6 +7,7 @@ import lombok.Getter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
 import java.time.Duration;
@@ -32,6 +33,7 @@ public class EventServerProvider implements Provider {
 
     JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
       wsContainer.setMaxTextMessageSize(65535);
+      context.addServlet(new ServletHolder(new DefaultServlet(configuration)), "/");
       wsContainer.setIdleTimeout(Duration.ofHours(3));
       wsContainer.addMapping("/", EventHandler.class);
     });
