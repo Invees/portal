@@ -2,7 +2,6 @@ package de.invees.portal.event.event;
 
 import de.invees.portal.event.configuration.Configuration;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
