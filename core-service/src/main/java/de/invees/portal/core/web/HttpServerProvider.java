@@ -42,7 +42,7 @@ public class HttpServerProvider implements Provider {
     ));
     before((request, response) -> response.header(
         "Access-Control-Allow-Headers",
-        "Authorization, Accept, Host, Upgrade"
+        "Authorization, Accept, Host, Upgrade, Content-Type"
     ));
     before((request, response) -> response.header(
         "Access-Control-Allow-Methods",
