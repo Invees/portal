@@ -59,7 +59,6 @@ public class HttpServerProvider implements Provider {
       JsonObject body = new JsonObject();
       body.addProperty("result", "success");
       body.addProperty("responseTime", System.currentTimeMillis());
-      System.out.println(response.body());
       if (response.body() == null) {
         body.addProperty("result", "error");
         body.addProperty("message", "Endpoint not found.");

@@ -22,6 +22,9 @@ public class TokenUtils {
         return null;
       }
     }
+    if ((double) authentication.getData().get("expiryTime") < System.currentTimeMillis()) {
+      return null;
+    }
     return userDataSource().byId(authentication.getUser().toString(), UserV1.class);
   }
 
